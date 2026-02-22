@@ -8,11 +8,9 @@ import { useWishes } from '../../lib/hooks/useWishes';
 import { supabase } from '../../lib/supabase';
 import CategoryTab from '../../components/CategoryTab';
 import WishCard from '../../components/WishCard';
-import WishActionSheet from '../../components/WishActionSheet';
 import EmptyState from '../../components/EmptyState';
 import LinkPartnerSheet from '../../components/LinkPartnerSheet';
 import GradientBackground from '../../components/GradientBackground';
-import { Wish } from '../../types';
 import { CATEGORIES, CategoryKey, ALL_CATEGORIES_KEY } from '../../constants/categories';
 import { Colors, Typography, Spacing, Radii } from '../../constants/theme';
 
@@ -21,7 +19,6 @@ export default function HomeScreen() {
   const { user, refresh } = useUser();
   const [selectedCategory, setSelectedCategory] = useState<CategoryKey | typeof ALL_CATEGORIES_KEY>(ALL_CATEGORIES_KEY);
   const [sheetVisible, setSheetVisible] = useState(false);
-  const [selectedWish, setSelectedWish] = useState<Wish | null>(null);
   const { wishes, loading, refresh: refreshWishes } = useWishes(user?.couple_id, selectedCategory, false);
   const activeCategory = CATEGORIES.find((c) => c.key === selectedCategory);
 
@@ -153,7 +150,7 @@ export default function HomeScreen() {
           data={wishes}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
-            <WishCard wish={item} onPress={() => setSelectedWish(item)} />
+            <WishCard wish={item} onPress={() => router.push(`/wish/${item.id}`)} />
           )}
           contentContainerStyle={[
             styles.listContent,
@@ -174,11 +171,6 @@ export default function HomeScreen() {
         </TouchableOpacity>
       </View>
 
-      <WishActionSheet
-        wish={selectedWish}
-        onClose={() => setSelectedWish(null)}
-        onRefresh={refreshWishes}
-      />
     </SafeAreaView>
   );
 }
@@ -232,11 +224,11 @@ const styles = StyleSheet.create({
   },
   gateButtonText: { ...Typography.subtitle, color: '#fff' },
   // App
-  tabBarWrapper: { backgroundColor: Colors.background, zIndex: 10, borderBottomWidth: 1, borderBottomColor: Colors.border },
+  tabBarWrapper: { backgroundColor: Colors.background, zIndex: 10 },
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   listContent: { paddingTop: Spacing.xs, paddingBottom: Spacing.xl },
   emptyContainer: { flex: 1 },
-  fabContainer: { paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm, alignItems: 'flex-end' },
+  fabContainer: { position: 'absolute', bottom: 20, right: 20 },
   fab: {
     width: 58, height: 58, borderRadius: 29,
     backgroundColor: Colors.primary,

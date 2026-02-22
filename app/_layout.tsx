@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { UserProvider, useUser } from '../lib/context/UserContext';
+import { registerAndStorePushToken } from '../lib/hooks/usePushNotifications';
 
 function RootLayoutNav() {
   const { user, session, loading } = useUser();
@@ -18,6 +19,12 @@ function RootLayoutNav() {
       if (inAuth) router.replace('/(app)');
     }
   }, [session, loading, segments]);
+
+  useEffect(() => {
+    if (session?.user?.id) {
+      registerAndStorePushToken(session.user.id);
+    }
+  }, [session?.user?.id]);
 
   if (loading) return null;
 

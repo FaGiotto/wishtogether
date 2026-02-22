@@ -10,6 +10,7 @@ import { supabase } from '../../lib/supabase';
 import { useUser } from '../../lib/context/UserContext';
 import { CATEGORIES, CategoryKey } from '../../constants/categories';
 import { Colors, Typography, Spacing, Radii } from '../../constants/theme';
+import { sendPush } from '../../lib/hooks/usePushNotifications';
 
 export default function AddWishModal() {
   const router = useRouter();
@@ -29,15 +30,22 @@ export default function AddWishModal() {
 
   async function uploadImage(uri: string, wishId: string): Promise<string | null> {
     try {
-      const ext = uri.split('.').pop() ?? 'jpg';
+      const ext = (uri.split('.').pop() ?? 'jpg').split('?')[0].toLowerCase();
+      const mime = ext === 'png' ? 'image/png' : ext === 'webp' ? 'image/webp' : 'image/jpeg';
       const path = `wishes/${wishId}.${ext}`;
-      const response = await fetch(uri);
-      const blob = await response.blob();
-      const { error } = await supabase.storage.from('wish-images').upload(path, blob, { contentType: `image/${ext}`, upsert: true });
-      if (error) return null;
+      const formData = new FormData();
+      formData.append('file', { uri, name: `wish.${ext}`, type: mime } as any);
+      const { error } = await supabase.storage.from('wish-images').upload(path, formData, { contentType: mime, upsert: true });
+      if (error) {
+        console.error('[uploadImage]', error.message);
+        return null;
+      }
       const { data } = supabase.storage.from('wish-images').getPublicUrl(path);
       return data.publicUrl;
-    } catch { return null; }
+    } catch (e) {
+      console.error('[uploadImage] exception', e);
+      return null;
+    }
   }
 
   async function handleSave() {
@@ -45,15 +53,35 @@ export default function AddWishModal() {
     if (!category) { Alert.alert('Categoria obbligatoria', 'Seleziona una categoria.'); return; }
     if (!user?.couple_id) { Alert.alert('Partner non collegato', 'Devi prima collegare il tuo partner.'); return; }
     setSaving(true);
+
     const { data: inserted, error } = await supabase.from('wishes').insert({
       couple_id: user.couple_id, category, title: title.trim(),
       description: notes.trim() || null, created_by: user.id,
     }).select('id').single();
+
     if (error || !inserted) { Alert.alert('Errore', error?.message ?? 'Impossibile salvare.'); setSaving(false); return; }
+
     if (imageUri) {
       const imageUrl = await uploadImage(imageUri, inserted.id);
       if (imageUrl) await supabase.from('wishes').update({ image_url: imageUrl }).eq('id', inserted.id);
     }
+
+    // Send push notification to partner
+    if (user.partner_id) {
+      const { data: partner } = await supabase
+        .from('users')
+        .select('push_token')
+        .eq('id', user.partner_id)
+        .single();
+      if (partner?.push_token) {
+        await sendPush(
+          partner.push_token,
+          '✨ Nuovo desiderio',
+          `${user.display_name} ha aggiunto "${title.trim()}"`,
+        );
+      }
+    }
+
     setSaving(false);
     router.back();
   }
@@ -142,7 +170,7 @@ const styles = StyleSheet.create({
     borderRadius: Radii.button, paddingHorizontal: Spacing.md, paddingVertical: 14,
     fontSize: 15, fontWeight: '400', color: Colors.textPrimary,
   },
-  inputMultiline: { minHeight: 88, textAlignVertical: 'top', paddingTop: 14 },
+  inputMultiline: { minHeight: 88, textAlignVertical: 'top', paddingTop: 14, borderRadius: 16 },
   imagePicker: {
     borderWidth: 1.5, borderColor: Colors.border, borderStyle: 'dashed',
     borderRadius: Radii.card, paddingVertical: Spacing.lg, alignItems: 'center', gap: Spacing.xs,

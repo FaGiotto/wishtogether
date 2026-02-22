@@ -1,19 +1,17 @@
 import { View, Text, FlatList, StyleSheet, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useState, useCallback } from 'react';
-import { useFocusEffect } from 'expo-router';
+import { useCallback } from 'react';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { useUser } from '../../lib/context/UserContext';
 import { useWishes } from '../../lib/hooks/useWishes';
 import WishCard from '../../components/WishCard';
-import WishActionSheet from '../../components/WishActionSheet';
 import EmptyState from '../../components/EmptyState';
-import { Wish } from '../../types';
 import { Colors, Typography, Spacing } from '../../constants/theme';
 
 export default function ArchiveScreen() {
+  const router = useRouter();
   const { user } = useUser();
   const { wishes, loading, refresh } = useWishes(user?.couple_id, 'all', true);
-  const [selectedWish, setSelectedWish] = useState<Wish | null>(null);
 
   useFocusEffect(
     useCallback(() => {
@@ -37,7 +35,7 @@ export default function ArchiveScreen() {
           data={wishes}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
-            <WishCard wish={item} onPress={() => setSelectedWish(item)} />
+            <WishCard wish={item} onPress={() => router.push(`/wish/${item.id}`)} />
           )}
           contentContainerStyle={[
             styles.listContent,
@@ -48,11 +46,6 @@ export default function ArchiveScreen() {
         />
       )}
 
-      <WishActionSheet
-        wish={selectedWish}
-        onClose={() => setSelectedWish(null)}
-        onRefresh={refresh}
-      />
     </SafeAreaView>
   );
 }

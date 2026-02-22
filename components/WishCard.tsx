@@ -74,7 +74,7 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   cardDone: { opacity: 0.55 },
-  image: { width: '100%', aspectRatio: 16 / 9 },
+  image: { width: '100%', aspectRatio: 4 / 3 },
   body: { padding: Spacing.md, paddingVertical: 18 },
   row: { flexDirection: 'row', alignItems: 'center', marginBottom: Spacing.xs },
   categoryPill: {

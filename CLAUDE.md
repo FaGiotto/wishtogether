@@ -18,9 +18,11 @@ Coppie che vivono insieme o si vedono spesso, che vogliono organizzare il tempo 
 ### MVP Scope
 - Autenticazione di due utenti e collegamento tramite codice invito
 - Lista desideri condivisa con 5 categorie: Posti, Ristoranti, Film/Serie, Videogiochi, Eventi
-- Aggiunta desideri manuale e tramite ricerca (Google Places per posti/ristoranti, TMDB per film/serie)
+- Aggiunta desideri manuale
 - Commenti/chat su ogni singolo desiderio in realtime
-- Segna come fatto ✓ con archivio storico
+- Cancellazione commenti propri con long press
+- Segna come fatto ✓ con animazione
+- Archivio storico desideri completati
 - Notifica push quando il partner aggiunge un nuovo desiderio
 
 ### Fuori Scope (MVP)
@@ -28,6 +30,7 @@ Coppie che vivono insieme o si vedono spesso, che vogliono organizzare il tempo 
 - Swipe/match
 - Condivisione social
 - Sotto-liste o tag personalizzati
+- Ricerca integrata (TMDB, Google Places)
 
 ### Success Metric
 L'app funziona se entrambi gli utenti riescono ad aggiungere un desiderio, commentarlo e segnarlo come completato in una sessione di test reale.
@@ -39,32 +42,31 @@ L'app funziona se entrambi gli utenti riescono ad aggiungere un desiderio, comme
 - **Frontend:** React Native con Expo
 - **Backend/DB:** Supabase (auth, database, realtime, storage)
 - **Notifiche:** Expo Notifications
-- **API esterne:** Google Places API (posti/ristoranti), TMDB API (film/serie)
 
 ---
 
 ## 3. Implementation Plan
 
 ### Tabelle Supabase
-- `users` — id, email, display_name, avatar_url, partner_id
-- `wishes` — id, couple_id, category, title, description, image_url, source_url, created_by, is_done, created_at
+- `users` — id, email, display_name, avatar_url, partner_id, couple_id, invite_code, push_token
+- `wishes` — id, couple_id, category, title, description, image_url, source_url, created_by, is_done, done_at, created_at
 - `comments` — id, wish_id, user_id, text, created_at
 
-### Fase 1 — Setup & Auth
-- [ ] Inizializzare progetto Expo
-- [ ] Configurare Supabase: tabelle, RLS policies
-- [ ] Schermata registrazione e login (email/password)
-- [ ] Generazione codice invito per collegare i due account
-- [ ] Schermata accettazione invito e collegamento coppia
+### Fase 1 — Setup & Auth ✅
+- [x] Inizializzare progetto Expo
+- [x] Configurare Supabase: tabelle, RLS policies
+- [x] Schermata registrazione e login (email/password)
+- [x] Generazione codice invito per collegare i due account
+- [x] Schermata accettazione invito e collegamento coppia
 
-### Fase 2 — Core Feature
-- [ ] Home con lista desideri filtrata per categoria (tab bar)
-- [ ] Aggiunta desiderio manuale (titolo, categoria, note, immagine opzionale)
-- [ ] Ricerca integrata: Google Places per Posti/Ristoranti, TMDB per Film/Serie
-- [ ] Dettaglio desiderio con commenti in realtime (Supabase realtime)
-- [ ] Segna come fatto ✓ con animazione
-- [ ] Schermata archivio (desideri completati)
-- [ ] Notifica push al partner quando viene aggiunto un nuovo desiderio
+### Fase 2 — Core Feature ✅
+- [x] Home con lista desideri filtrata per categoria (tab bar)
+- [x] Aggiunta desiderio manuale (titolo, categoria, note, immagine opzionale)
+- [x] Dettaglio desiderio con commenti in realtime (Supabase realtime)
+- [x] Cancellazione commenti propri con long press
+- [x] Segna come fatto ✓ con animazione spring
+- [x] Schermata archivio (desideri completati)
+- [x] Notifica push al partner quando viene aggiunto un nuovo desiderio
 
 ### Fase 3 — Polish
 - [ ] Splash screen e icona app
@@ -81,21 +83,24 @@ L'app funziona se entrambi gli utenti riescono ad aggiungere un desiderio, comme
 Caldo, moderno, intimo. Non un'app aziendale — deve sembrare personale e piacevole da usare la sera sul divano.
 
 ### Colori
-- **Primary:** #6C63FF
-- **Secondary:** #FF6584
-- **Background:** #F8F8F8
+Valori reali da `constants/theme.ts`:
+- **Primary:** #7C5CFC
+- **Secondary:** #FF6B9D
+- **Background:** #EEEAF8
 - **Surface (card):** #FFFFFF
+- **Surface2:** #F3F0FF
 - **Text primario:** #1A1A2E
-- **Text secondario:** #6B7280
+- **Text secondario:** #8892A4
 - **Success:** #10B981
-- **Border:** #E5E7EB
+- **Error:** #EF4444
+- **Border:** #EDE8FF
 
 ### Tipografia
-- Font: System default (SF Pro su iOS, Roboto su Android)
-- Titoli: 22px bold
-- Sottotitoli: 16px semibold
-- Body: 14px regular
-- Caption: 12px regular, colore secondario
+Valori reali da `constants/theme.ts`:
+- Titoli: 26px bold
+- Sottotitoli: 17px semibold
+- Body: 15px regular
+- Caption: 13px regular, colore secondario
 
 ### Icone
 - Libreria: `@expo/vector-icons` (Ionicons), outline di default, filled per stato attivo
@@ -110,16 +115,26 @@ Caldo, moderno, intimo. Non un'app aziendale — deve sembrare personale e piace
 | Eventi | `calendar-outline` | #3B82F6 |
 
 ### Spacing & Layout
-- Border radius: 12px card, 8px bottoni piccoli
-- Padding interno card: 16px
-- Spacing: multipli di 8px
+Valori reali da `constants/theme.ts`:
+- `xs`: 4px, `sm`: 8px, `md`: 16px, `lg`: 24px, `xl`: 32px
+- Border radius: `card` 20px, `button` 50px (pill), `full` 9999px
+- Il campo note nella creazione desiderio usa `borderRadius: 16` (meno stondato del pill)
 - Ombra: `shadowOpacity: 0.08` max
+
+### Nav bar (bottom tabs)
+- `height`: 92px
+- `paddingTop`: 10px, `paddingBottom`: 24px
+- Nessuna riga di separazione sopra la category tab bar in home
+
+### FAB
+- Posizione: `absolute`, `bottom: 20`, `right: 20`
+- Dimensioni: 58×58px, `borderRadius: 29`
 
 ### Componenti chiave
 - **WishCard:** immagine (se presente) in alto, titolo, categoria pill, icona ✓ se completato
-- **CategoryTab:** tab bar orizzontale scrollabile in cima alla home
-- **CommentBubble:** stile chat, allineato a destra se mio, sinistra se del partner
-- **AddButton:** FAB in basso a destra, colore primary
+- **CategoryTab:** tab bar orizzontale scrollabile in cima alla home, senza bordo inferiore
+- **CommentBubble:** stile chat, allineato a destra se mio (bg primary+18, testo primary), sinistra se del partner (bg surface2). Long press sui propri commenti → Alert di eliminazione
+- **FAB:** `position: absolute` in basso a destra, colore primary
 
 ---
 
@@ -138,22 +153,29 @@ Caldo, moderno, intimo. Non un'app aziendale — deve sembrare personale e piace
 > Il gate screen blocca completamente l'accesso all'app finché i due account non sono collegati. Non è possibile aggiungere desideri senza un partner.
 
 ### Journey 2 — Aggiunta desiderio manuale
-1. Home → tap su FAB (+) in basso a destra
+1. Home → tap su FAB (+) in basso a destra, posizionato `absolute` equidistante da bordo e nav bar
 2. Si apre la modal "Nuovo desiderio" dal basso
-3. Form in sequenza: selezione categoria (pill), titolo (obbligatorio), note (opzionale), immagine da galleria (opzionale)
-4. Tap "Salva desiderio" → il desiderio appare in cima alla lista senza refresh
+3. Form in sequenza: selezione categoria (pill), titolo (obbligatorio), note (opzionale, meno stondato), immagine da galleria (opzionale)
+4. Tap "Salva desiderio" → il desiderio appare in cima alla lista senza refresh; notifica push inviata al partner
 
-### Journey 3 — Azioni su un desiderio
-1. Home → tap su una WishCard
-2. Si apre **WishActionSheet** (bottom sheet con backdrop semitrasparente)
-3. Due azioni disponibili:
-   - **Segna come completato** (pulsante verde prominente) → Alert di conferma sistema → il desiderio si sposta nell'Archivio
-   - **Elimina desiderio** (pulsante con bordo rosso) → Alert di conferma → eliminazione definitiva
-4. Il pulsante "Segna come completato" non compare se il desiderio è già fatto (es. nell'Archivio)
+### Journey 3 — Dettaglio desiderio e commenti
+1. Home o Archivio → tap su una WishCard → navigazione a `app/wish/[id].tsx`
+2. Schermata dettaglio:
+   - Header: ← back | categoria pill | ⋯ menu
+   - Immagine 16:9 (se presente)
+   - Titolo, descrizione, meta (creator · data)
+   - Sezione commenti in realtime
+3. Footer: TextInput + pulsante invio
+4. Invio commento → appare in realtime su entrambi i dispositivi
+5. Long press su un proprio commento → Alert "Elimina commento" → eliminazione in realtime
+6. Menu ⋯ → Alert con opzioni:
+   - **Segna come completato ✓** (solo se non già fatto) → animazione spring checkmark → torna alla home
+   - **Elimina desiderio** → Alert conferma → eliminazione → torna alla home
 
 ### Journey 4 — Archivio
 1. Tab "Archivio" in basso → lista dei desideri con `is_done: true`
-2. Tap su una card → stesso **WishActionSheet** ma con solo l'opzione "Elimina" (già completato)
+2. Tap su una card → stessa schermata dettaglio `app/wish/[id].tsx`
+3. Menu ⋯ mostra solo "Elimina desiderio" (già completato)
 
 ### Journey 5 — Gestione profilo
 1. Home → tap sull'avatar in alto a destra
@@ -170,10 +192,10 @@ Caldo, moderno, intimo. Non un'app aziendale — deve sembrare personale e piace
     ├── Home
     │   ├── Gate screen (se non collegati) → LinkPartnerSheet
     │   └── Lista desideri per categoria
-    │       └── WishActionSheet (segna fatto / elimina)
+    │       └── WishDetail (segna fatto / commenti / elimina)
     ├── Archivio
     │   └── Lista desideri completati
-    │       └── WishActionSheet (elimina)
+    │       └── WishDetail (commenti / elimina)
     └── Modal
         └── Aggiungi desiderio
 ```

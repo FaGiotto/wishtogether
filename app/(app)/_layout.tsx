@@ -13,9 +13,9 @@ export default function AppLayout() {
           backgroundColor: Colors.surface,
           borderTopColor: Colors.border,
           borderTopWidth: 1,
-          paddingBottom: 8,
-          paddingTop: 8,
-          height: 64,
+          paddingBottom: 24,
+          paddingTop: 10,
+          height: 92,
         },
         tabBarLabelStyle: { fontSize: 12, fontWeight: '600' },
       }}
