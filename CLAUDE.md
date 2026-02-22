@@ -126,47 +126,54 @@ Caldo, moderno, intimo. Non un'app aziendale — deve sembrare personale e piace
 ## 5. User Journeys
 
 ### Journey 1 — Primo accesso e collegamento coppia
-1. Splash Screen → logo + nome app
-2. Onboarding (3 slide max)
-3. Registrazione → email + password + nome visualizzato
-4. Schermata collegamento → "Crea lista coppia" (genera codice 6 caratteri) o "Unisciti con codice"
-5. Home → empty state che invita ad aggiungere il primo desiderio
+1. Registrazione → email + password + nome visualizzato
+2. Login → si entra nell'app
+3. Home → **gate screen** a schermo intero: card con icona, spiegazione e pulsante "Inizia a collegarti"
+4. Tap sul pulsante → si apre il bottom sheet **LinkPartnerSheet**
+5. Due opzioni nel sheet:
+   - **Il tuo codice invito**: genera/mostra un codice a 6 caratteri da condividere col partner
+   - **Inserisci il codice del partner**: inserisce il codice ricevuto e preme "Collega"
+6. Al collegamento riuscito → Alert di conferma "Coppia collegata!" → entrambi i dispositivi passano automaticamente alla home completa (via Supabase Realtime)
+
+> Il gate screen blocca completamente l'accesso all'app finché i due account non sono collegati. Non è possibile aggiungere desideri senza un partner.
 
 ### Journey 2 — Aggiunta desiderio manuale
-1. Home → tap su FAB (+)
-2. Selezione categoria → bottom sheet con le 5 categorie
-3. Form → titolo (obbligatorio), note (opzionale), immagine da galleria (opzionale)
-4. Salva → nuovo item appare in cima alla lista
-5. Notifica push al partner → "Marco ha aggiunto un nuovo desiderio 🎉"
+1. Home → tap su FAB (+) in basso a destra
+2. Si apre la modal "Nuovo desiderio" dal basso
+3. Form in sequenza: selezione categoria (pill), titolo (obbligatorio), note (opzionale), immagine da galleria (opzionale)
+4. Tap "Salva desiderio" → il desiderio appare in cima alla lista senza refresh
 
-### Journey 3 — Aggiunta tramite ricerca
-1. Home → tap su FAB (+)
-2. Selezione categoria → es. Film/Serie
-3. Form → tap su "Cerca film..." → searchbar → risultati da TMDB
-4. Selezione → campi pre-compilati (titolo, immagine, descrizione)
-5. Salva → come Journey 2
-*(stesso flusso per Posti/Ristoranti con Google Places)*
+### Journey 3 — Azioni su un desiderio
+1. Home → tap su una WishCard
+2. Si apre **WishActionSheet** (bottom sheet con backdrop semitrasparente)
+3. Due azioni disponibili:
+   - **Segna come completato** (pulsante verde prominente) → Alert di conferma sistema → il desiderio si sposta nell'Archivio
+   - **Elimina desiderio** (pulsante con bordo rosso) → Alert di conferma → eliminazione definitiva
+4. Il pulsante "Segna come completato" non compare se il desiderio è già fatto (es. nell'Archivio)
 
-### Journey 4 — Commento su un desiderio
-1. Home → tap su WishCard
-2. Dettaglio → immagine, titolo, descrizione, sezione commenti
-3. Scrivi commento → invia
-4. Realtime → il commento del partner appare senza refresh
+### Journey 4 — Archivio
+1. Tab "Archivio" in basso → lista dei desideri con `is_done: true`
+2. Tap su una card → stesso **WishActionSheet** ma con solo l'opzione "Elimina" (già completato)
 
-### Journey 5 — Segna come fatto
-1. Dettaglio desiderio → tap "Segna come fatto ✓"
-2. Animazione checkmark → card diventa grigia/barrata
-3. Desiderio si sposta nell'archivio con data di completamento
+### Journey 5 — Gestione profilo
+1. Home → tap sull'avatar in alto a destra
+2. Alert con nome e email dell'utente e due opzioni:
+   - **Scollega partner** (se collegati) → conferma → entrambi i dispositivi tornano al gate screen automaticamente (Realtime)
+   - **Log out** → disconnessione e redirect al login
 
 ### Navigazione
 ```
 ├── Auth Stack
 │   ├── Login
-│   ├── Registrazione
-│   └── Collegamento coppia
-└── App Stack
-    ├── Home (lista per categoria)
-    ├── Dettaglio desiderio
-    ├── Aggiungi desiderio
-    └── Archivio (fatti ✓)
+│   └── Registrazione
+└── App Stack (Tabs)
+    ├── Home
+    │   ├── Gate screen (se non collegati) → LinkPartnerSheet
+    │   └── Lista desideri per categoria
+    │       └── WishActionSheet (segna fatto / elimina)
+    ├── Archivio
+    │   └── Lista desideri completati
+    │       └── WishActionSheet (elimina)
+    └── Modal
+        └── Aggiungi desiderio
 ```
