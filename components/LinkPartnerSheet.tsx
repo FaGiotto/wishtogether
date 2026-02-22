@@ -31,19 +31,9 @@ export default function LinkPartnerSheet({ visible, onClose }: Props) {
     if (!user) return;
     setLoading(true);
     const code = generateCode();
-
-    const { error } = await supabase
-      .from('users')
-      .update({ invite_code: code })
-      .eq('id', user.id);
-
-    if (error) {
-      console.error('[LinkPartnerSheet] handleGenerateCode:', error);
-      Alert.alert('Errore', error.message);
-    } else {
-      setMyCode(code);
-      await refresh();
-    }
+    const { error } = await supabase.from('users').update({ invite_code: code }).eq('id', user.id);
+    if (error) { Alert.alert('Errore', error.message); }
+    else { setMyCode(code); await refresh(); }
     setLoading(false);
   }
 
@@ -51,19 +41,9 @@ export default function LinkPartnerSheet({ visible, onClose }: Props) {
     if (!user) return;
     setLoading(true);
     const code = generateCode();
-
-    const { error } = await supabase
-      .from('users')
-      .update({ invite_code: code })
-      .eq('id', user.id);
-
-    if (error) {
-      console.error('[LinkPartnerSheet] handleRegenerateCode:', error);
-      Alert.alert('Errore', error.message);
-    } else {
-      setMyCode(code);
-      await refresh();
-    }
+    const { error } = await supabase.from('users').update({ invite_code: code }).eq('id', user.id);
+    if (error) { Alert.alert('Errore', error.message); }
+    else { setMyCode(code); await refresh(); }
     setLoading(false);
   }
 
@@ -73,70 +53,33 @@ export default function LinkPartnerSheet({ visible, onClose }: Props) {
     setLoading(true);
 
     const { data: partner, error: queryError } = await supabase
-      .from('users')
-      .select('id')
-      .eq('invite_code', code)
-      .maybeSingle();
+      .from('users').select('id').eq('invite_code', code).maybeSingle();
 
-    if (queryError) {
-      console.error('[LinkPartnerSheet] handleJoin query:', queryError);
-      Alert.alert('Errore', `Impossibile cercare il codice: ${queryError.message}`);
-      setLoading(false);
-      return;
-    }
-
-    if (!partner) {
-      console.log('[LinkPartnerSheet] handleJoin: nessun utente con codice', code);
-      Alert.alert('Codice non trovato', 'Nessun utente trovato con questo codice. Controllalo e riprova.');
-      setLoading(false);
-      return;
-    }
-
-    if (partner.id === user.id) {
-      Alert.alert('Errore', 'Non puoi collegarti a te stesso.');
-      setLoading(false);
-      return;
-    }
+    if (queryError) { Alert.alert('Errore', queryError.message); setLoading(false); return; }
+    if (!partner) { Alert.alert('Codice non trovato', 'Nessun utente trovato con questo codice.'); setLoading(false); return; }
+    if (partner.id === user.id) { Alert.alert('Errore', 'Non puoi collegarti a te stesso.'); setLoading(false); return; }
 
     const coupleId = [user.id, partner.id].sort().join('_');
-
     const { error: rpcError } = await supabase.rpc('link_couple', {
-      p_user_id: user.id,
-      p_partner_id: partner.id,
-      p_couple_id: coupleId,
+      p_user_id: user.id, p_partner_id: partner.id, p_couple_id: coupleId,
     });
 
-    if (rpcError) {
-      console.error('[LinkPartnerSheet] link_couple RPC:', rpcError);
-      Alert.alert('Errore', rpcError.message);
-      setLoading(false);
-      return;
-    }
+    if (rpcError) { Alert.alert('Errore', rpcError.message); setLoading(false); return; }
 
     await refresh();
     setLoading(false);
-    Alert.alert(
-      'Coppia collegata!',
-      'Ora condividete la stessa lista di desideri.',
-      [{ text: 'Iniziamo', onPress: onClose }],
-    );
+    Alert.alert('Coppia collegata! 💜', 'Ora condividete la stessa lista di desideri.', [
+      { text: 'Iniziamo', onPress: onClose },
+    ]);
   }
 
   return (
-    <Modal
-      visible={visible}
-      animationType="slide"
-      presentationStyle="pageSheet"
-      onRequestClose={onClose}
-    >
+    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
       <KeyboardAvoidingView
         style={styles.container}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        {/* Handle bar */}
         <View style={styles.handleBar} />
-
-        {/* Header */}
         <View style={styles.header}>
           <Text style={styles.title}>Collega il partner</Text>
           <TouchableOpacity onPress={onClose} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
@@ -144,38 +87,22 @@ export default function LinkPartnerSheet({ visible, onClose }: Props) {
           </TouchableOpacity>
         </View>
 
-        {/* Sezione: il mio codice */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Il tuo codice invito</Text>
-          <Text style={styles.sectionSubtitle}>
-            Condividilo con il partner così può inserirlo qui sotto.
-          </Text>
-
+          <Text style={styles.sectionSubtitle}>Condividilo con il partner così può inserirlo qui sotto.</Text>
           {myCode ? (
             <View style={styles.codeRow}>
               <View style={styles.codeBox}>
                 <Text style={styles.codeText}>{myCode}</Text>
               </View>
-              <TouchableOpacity
-                style={styles.regenButton}
-                onPress={handleRegenerateCode}
-                disabled={loading}
-              >
+              <TouchableOpacity style={styles.regenButton} onPress={handleRegenerateCode} disabled={loading}>
                 <Ionicons name="refresh-outline" size={16} color={Colors.primary} />
                 <Text style={styles.regenText}>Rigenera</Text>
               </TouchableOpacity>
             </View>
           ) : (
-            <TouchableOpacity
-              style={styles.button}
-              onPress={handleGenerateCode}
-              disabled={loading}
-            >
-              {loading ? (
-                <ActivityIndicator color={Colors.surface} />
-              ) : (
-                <Text style={styles.buttonText}>Genera il mio codice</Text>
-              )}
+            <TouchableOpacity style={styles.button} onPress={handleGenerateCode} disabled={loading} activeOpacity={0.85}>
+              {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Genera il mio codice</Text>}
             </TouchableOpacity>
           )}
         </View>
@@ -186,7 +113,6 @@ export default function LinkPartnerSheet({ visible, onClose }: Props) {
           <View style={styles.dividerLine} />
         </View>
 
-        {/* Sezione: inserisci codice partner */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Inserisci il codice del partner</Text>
           <TextInput
@@ -200,19 +126,12 @@ export default function LinkPartnerSheet({ visible, onClose }: Props) {
             onChangeText={setInputCode}
           />
           <TouchableOpacity
-            style={[
-              styles.button,
-              styles.buttonSecondary,
-              (inputCode.length < 6 || loading) && styles.buttonDisabled,
-            ]}
+            style={[styles.button, styles.buttonSecondary, (inputCode.length < 6 || loading) && styles.buttonDisabled]}
             onPress={handleJoin}
             disabled={inputCode.length < 6 || loading}
+            activeOpacity={0.85}
           >
-            {loading ? (
-              <ActivityIndicator color={Colors.surface} />
-            ) : (
-              <Text style={styles.buttonText}>Collega</Text>
-            )}
+            {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Collega</Text>}
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
@@ -221,87 +140,42 @@ export default function LinkPartnerSheet({ visible, onClose }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.surface,
-    paddingHorizontal: Spacing.lg,
-  },
+  container: { flex: 1, backgroundColor: Colors.surface, paddingHorizontal: Spacing.lg },
   handleBar: {
-    width: 36,
-    height: 4,
-    backgroundColor: Colors.border,
-    borderRadius: 2,
-    alignSelf: 'center',
-    marginTop: Spacing.sm,
-    marginBottom: Spacing.xs,
+    width: 36, height: 4, backgroundColor: Colors.border,
+    borderRadius: 2, alignSelf: 'center', marginTop: Spacing.sm, marginBottom: Spacing.xs,
   },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: Spacing.md,
-  },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: Spacing.md },
   title: { ...Typography.title, color: Colors.textPrimary },
   section: { marginBottom: Spacing.lg },
   sectionTitle: { ...Typography.subtitle, color: Colors.textPrimary, marginBottom: 4 },
   sectionSubtitle: { ...Typography.caption, marginBottom: Spacing.sm },
-  codeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-  },
+  codeRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
   codeBox: {
-    flex: 1,
-    backgroundColor: Colors.background,
-    borderRadius: Radii.card,
-    paddingVertical: Spacing.md,
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: Colors.primary,
-    borderStyle: 'dashed',
+    flex: 1, backgroundColor: Colors.surface2,
+    borderRadius: Radii.card, paddingVertical: Spacing.md,
+    alignItems: 'center', borderWidth: 2, borderColor: Colors.primary, borderStyle: 'dashed',
   },
-  codeText: {
-    fontSize: 26,
-    fontWeight: '700',
-    color: Colors.primary,
-    letterSpacing: 6,
-  },
-  regenButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingVertical: Spacing.sm,
-    paddingHorizontal: Spacing.xs,
-  },
+  codeText: { fontSize: 28, fontWeight: '700', color: Colors.primary, letterSpacing: 8 },
+  regenButton: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: Spacing.sm, paddingHorizontal: Spacing.xs },
   regenText: { ...Typography.caption, color: Colors.primary, fontWeight: '600' },
-  divider: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: Spacing.lg,
-    gap: Spacing.sm,
-  },
+  divider: { flexDirection: 'row', alignItems: 'center', marginBottom: Spacing.lg, gap: Spacing.sm },
   dividerLine: { flex: 1, height: 1, backgroundColor: Colors.border },
   dividerText: { ...Typography.caption, color: Colors.textSecondary },
   input: {
     backgroundColor: Colors.background,
-    borderWidth: 1,
-    borderColor: Colors.border,
+    borderWidth: 1.5, borderColor: Colors.border,
     borderRadius: Radii.button,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: 14,
+    paddingHorizontal: Spacing.md, paddingVertical: 14,
     marginBottom: Spacing.sm,
     ...Typography.subtitle,
-    color: Colors.textPrimary,
-    letterSpacing: 8,
-    textAlign: 'center',
+    color: Colors.textPrimary, letterSpacing: 8, textAlign: 'center',
   },
   button: {
-    backgroundColor: Colors.primary,
-    borderRadius: Radii.button,
-    paddingVertical: 16,
-    alignItems: 'center',
+    backgroundColor: Colors.primary, borderRadius: Radii.button,
+    paddingVertical: 17, alignItems: 'center',
   },
   buttonSecondary: { backgroundColor: Colors.secondary },
   buttonDisabled: { opacity: 0.4 },
-  buttonText: { ...Typography.subtitle, color: Colors.surface },
+  buttonText: { ...Typography.subtitle, color: '#fff' },
 });

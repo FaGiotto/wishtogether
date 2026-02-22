@@ -14,7 +14,7 @@ const DEFAULT_MESSAGES = {
 };
 
 const DONE_MESSAGES = {
-  title: 'Niente nell\'archivio',
+  title: "Niente nell'archivio",
   subtitle: 'I desideri completati appariranno qui.',
 };
 
@@ -23,15 +23,17 @@ export default function EmptyState({ category, isDone }: Props) {
   const subtitle = category
     ? `Aggiungi il primo "${category.label}" con il + in basso.`
     : messages.subtitle;
+  const iconColor = category?.color ?? Colors.primary;
 
   return (
     <View style={styles.container}>
-      <Ionicons
-        name={(category?.icon as any) ?? 'heart-outline'}
-        size={88}
-        color={category?.color ?? Colors.border}
-        style={styles.icon}
-      />
+      <View style={[styles.iconWrap, { backgroundColor: iconColor + '15' }]}>
+        <Ionicons
+          name={(category?.icon as any) ?? 'heart-outline'}
+          size={44}
+          color={iconColor}
+        />
+      </View>
       <Text style={styles.title}>{messages.title}</Text>
       <Text style={styles.subtitle}>{subtitle}</Text>
     </View>
@@ -45,7 +47,25 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: Spacing.xl,
   },
-  icon: { marginBottom: Spacing.lg, opacity: 0.65 },
-  title: { fontSize: 18, fontWeight: '700', color: Colors.textPrimary, textAlign: 'center', marginBottom: Spacing.sm },
-  subtitle: { ...Typography.body, color: Colors.textSecondary, textAlign: 'center', lineHeight: 22 },
+  iconWrap: {
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: Spacing.lg,
+  },
+  title: {
+    fontSize: 19,
+    fontWeight: '700',
+    color: Colors.textPrimary,
+    textAlign: 'center',
+    marginBottom: Spacing.sm,
+  },
+  subtitle: {
+    ...Typography.body,
+    color: Colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: 22,
+  },
 });

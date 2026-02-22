@@ -58,26 +58,20 @@ export default function WishActionSheet({ wish, onClose, onRefresh }: Props) {
 
   return (
     <Modal visible animationType="slide" transparent onRequestClose={onClose}>
-      {/* Backdrop */}
       <TouchableOpacity style={styles.backdrop} onPress={onClose} activeOpacity={1} />
-
-      {/* Sheet */}
       <View style={styles.sheet}>
         <View style={styles.handleBar} />
-
         <Text style={styles.wishTitle} numberOfLines={2}>{wish.title}</Text>
 
-        {/* Azione principale: segna come fatto */}
         {!wish.is_done && (
           <TouchableOpacity style={styles.doneButton} onPress={handleMarkDone} activeOpacity={0.85}>
-            <Ionicons name="checkmark-circle" size={24} color={Colors.surface} style={styles.btnIcon} />
+            <Ionicons name="checkmark-circle" size={20} color="#fff" style={styles.btnIcon} />
             <Text style={styles.doneButtonText}>Segna come completato</Text>
           </TouchableOpacity>
         )}
 
-        {/* Azione secondaria: elimina */}
         <TouchableOpacity style={styles.deleteButton} onPress={handleDelete} activeOpacity={0.85}>
-          <Ionicons name="trash-outline" size={18} color={Colors.error} style={styles.btnIcon} />
+          <Ionicons name="trash-outline" size={17} color={Colors.error} style={styles.btnIcon} />
           <Text style={styles.deleteButtonText}>Elimina desiderio</Text>
         </TouchableOpacity>
       </View>
@@ -88,14 +82,16 @@ export default function WishActionSheet({ wish, onClose, onRefresh }: Props) {
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.35)',
+    backgroundColor: 'rgba(26,26,46,0.4)',
   },
   sheet: {
     backgroundColor: Colors.surface,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
     paddingHorizontal: Spacing.md,
-    paddingBottom: 40,
+    paddingBottom: 44,
+    borderTopWidth: 1,
+    borderColor: Colors.border,
   },
   handleBar: {
     width: 36,
@@ -108,7 +104,7 @@ const styles = StyleSheet.create({
   },
   wishTitle: {
     ...Typography.subtitle,
-    fontSize: 17,
+    fontSize: 16,
     color: Colors.textPrimary,
     marginBottom: Spacing.lg,
     paddingHorizontal: Spacing.xs,
@@ -122,24 +118,17 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     marginBottom: Spacing.sm,
   },
-  doneButtonText: {
-    ...Typography.subtitle,
-    color: Colors.surface,
-  },
+  doneButtonText: { ...Typography.subtitle, color: '#fff' },
   deleteButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1.5,
-    borderColor: Colors.error + '50',
+    borderColor: Colors.error + '40',
     borderRadius: Radii.button,
-    paddingVertical: 13,
+    paddingVertical: 14,
     marginTop: Spacing.xs,
   },
-  deleteButtonText: {
-    ...Typography.body,
-    fontWeight: '600',
-    color: Colors.error,
-  },
+  deleteButtonText: { ...Typography.body, fontWeight: '600', color: Colors.error },
   btnIcon: { marginRight: 8 },
 });

@@ -11,6 +11,7 @@ import WishCard from '../../components/WishCard';
 import WishActionSheet from '../../components/WishActionSheet';
 import EmptyState from '../../components/EmptyState';
 import LinkPartnerSheet from '../../components/LinkPartnerSheet';
+import GradientBackground from '../../components/GradientBackground';
 import { Wish } from '../../types';
 import { CATEGORIES, CategoryKey, ALL_CATEGORIES_KEY } from '../../constants/categories';
 import { Colors, Typography, Spacing, Radii } from '../../constants/theme';
@@ -86,48 +87,50 @@ export default function HomeScreen() {
   // ─── Scenario A: utente non collegato ────────────────────────────────────
   if (!user?.couple_id) {
     return (
-      <SafeAreaView style={styles.container} edges={['top']}>
-        {header}
-        <LinkPartnerSheet visible={sheetVisible} onClose={() => setSheetVisible(false)} />
+      <GradientBackground style={styles.gradientFlex}>
+        <SafeAreaView style={styles.containerTransparent} edges={['top']}>
+          {header}
+          <LinkPartnerSheet visible={sheetVisible} onClose={() => setSheetVisible(false)} />
 
-        <View style={styles.gateContainer}>
-          <View style={styles.gateCard}>
-            {/* Icona */}
-            <View style={styles.gateIconWrap}>
-              <Ionicons name="people" size={48} color={Colors.primary} />
-              <View style={styles.gateHeartBadge}>
-                <Ionicons name="heart" size={16} color={Colors.surface} />
-              </View>
-            </View>
-
-            {/* Testi */}
-            <Text style={styles.gateTitle}>Collega il tuo partner</Text>
-            <Text style={styles.gateSubtitle}>
-              Condividi un codice con il tuo partner per creare la vostra lista di desideri condivisa.
-            </Text>
-
-            {/* Categoria pills decorative */}
-            <View style={styles.gatePills}>
-              {CATEGORIES.map((cat) => (
-                <View key={cat.key} style={[styles.gatePill, { backgroundColor: cat.color + '18', borderColor: cat.color + '40' }]}>
-                  <Ionicons name={cat.icon as any} size={13} color={cat.color} style={{ marginRight: 4 }} />
-                  <Text style={[styles.gatePillText, { color: cat.color }]}>{cat.label}</Text>
+          <View style={styles.gateContainer}>
+            <View style={styles.gateCard}>
+              {/* Icona */}
+              <View style={styles.gateIconWrap}>
+                <Ionicons name="people" size={48} color={Colors.primary} />
+                <View style={styles.gateHeartBadge}>
+                  <Ionicons name="heart" size={16} color="#fff" />
                 </View>
-              ))}
-            </View>
+              </View>
 
-            {/* CTA */}
-            <TouchableOpacity
-              style={styles.gateButton}
-              onPress={() => setSheetVisible(true)}
-              activeOpacity={0.85}
-            >
-              <Ionicons name="link-outline" size={20} color={Colors.surface} style={{ marginRight: 8 }} />
-              <Text style={styles.gateButtonText}>Inizia a collegarti</Text>
-            </TouchableOpacity>
+              {/* Testi */}
+              <Text style={styles.gateTitle}>Collega il tuo partner</Text>
+              <Text style={styles.gateSubtitle}>
+                Condividi un codice con il tuo partner per creare la vostra lista di desideri condivisa.
+              </Text>
+
+              {/* Categoria pills decorative */}
+              <View style={styles.gatePills}>
+                {CATEGORIES.map((cat) => (
+                  <View key={cat.key} style={[styles.gatePill, { backgroundColor: cat.color + '18', borderColor: cat.color + '40' }]}>
+                    <Ionicons name={cat.icon as any} size={13} color={cat.color} style={{ marginRight: 4 }} />
+                    <Text style={[styles.gatePillText, { color: cat.color }]}>{cat.label}</Text>
+                  </View>
+                ))}
+              </View>
+
+              {/* CTA */}
+              <TouchableOpacity
+                style={styles.gateButton}
+                onPress={() => setSheetVisible(true)}
+                activeOpacity={0.85}
+              >
+                <Ionicons name="link-outline" size={20} color="#fff" style={{ marginRight: 8 }} />
+                <Text style={styles.gateButtonText}>Inizia a collegarti</Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
-      </SafeAreaView>
+        </SafeAreaView>
+      </GradientBackground>
     );
   }
 
@@ -167,7 +170,7 @@ export default function HomeScreen() {
           onPress={() => router.push('/modal/add-wish')}
           activeOpacity={0.85}
         >
-          <Ionicons name="add" size={28} color={Colors.surface} />
+          <Ionicons name="add" size={28} color="#fff" />
         </TouchableOpacity>
       </View>
 
@@ -182,133 +185,62 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
+  gradientFlex: { flex: 1 },
+  containerTransparent: { flex: 1, backgroundColor: 'transparent' },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+    paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm,
   },
   headerTitle: { ...Typography.title, color: Colors.textPrimary },
   avatar: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: Colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
+    width: 38, height: 38, borderRadius: 19,
+    backgroundColor: Colors.primary + '20',
+    borderWidth: 1.5, borderColor: Colors.primary,
+    justifyContent: 'center', alignItems: 'center',
   },
-  avatarText: { color: Colors.surface, fontWeight: '700', fontSize: 15 },
-
-  // Gate (scenario non collegato)
-  gateContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    paddingHorizontal: Spacing.md,
-    paddingBottom: Spacing.xl,
-  },
+  avatarText: { color: Colors.primary, fontWeight: '700', fontSize: 15 },
+  // Gate
+  gateContainer: { flex: 1, justifyContent: 'center', paddingHorizontal: Spacing.md, paddingBottom: Spacing.xl },
   gateCard: {
-    backgroundColor: Colors.surface,
-    borderRadius: Radii.card,
-    padding: Spacing.xl,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOpacity: 0.07,
-    shadowRadius: 16,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 4,
+    backgroundColor: 'rgba(255,255,255,0.9)',
+    borderRadius: 28, padding: Spacing.xl, alignItems: 'center',
+    borderWidth: 1, borderColor: Colors.border,
+    shadowColor: Colors.primary, shadowOpacity: 0.12, shadowRadius: 24, shadowOffset: { width: 0, height: 8 }, elevation: 6,
   },
   gateIconWrap: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: 88, height: 88, borderRadius: 44,
     backgroundColor: Colors.primary + '15',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: Spacing.lg,
+    justifyContent: 'center', alignItems: 'center', marginBottom: Spacing.lg,
   },
   gateHeartBadge: {
-    position: 'absolute',
-    bottom: 4,
-    right: 4,
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+    position: 'absolute', bottom: 4, right: 4,
+    width: 26, height: 26, borderRadius: 13,
     backgroundColor: Colors.secondary,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: 'center', alignItems: 'center',
   },
-  gateTitle: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: Colors.textPrimary,
-    textAlign: 'center',
-    marginBottom: Spacing.sm,
-  },
-  gateSubtitle: {
-    ...Typography.body,
-    color: Colors.textSecondary,
-    textAlign: 'center',
-    lineHeight: 22,
-    marginBottom: Spacing.lg,
-  },
-  gatePills: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
-    gap: 8,
-    marginBottom: Spacing.xl,
-  },
-  gatePill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderRadius: Radii.full,
-    paddingVertical: 5,
-    paddingHorizontal: 10,
-  },
-  gatePillText: { fontSize: 12, fontWeight: '600' },
+  gateTitle: { fontSize: 24, fontWeight: '700', color: Colors.textPrimary, textAlign: 'center', marginBottom: Spacing.sm },
+  gateSubtitle: { ...Typography.body, color: Colors.textSecondary, textAlign: 'center', lineHeight: 22, marginBottom: Spacing.lg },
+  gatePills: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 8, marginBottom: Spacing.xl },
+  gatePill: { flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderRadius: Radii.full, paddingVertical: 6, paddingHorizontal: 11 },
+  gatePillText: { fontSize: 12, fontWeight: '700' },
   gateButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.primary,
-    borderRadius: Radii.button,
-    paddingVertical: 16,
-    paddingHorizontal: Spacing.xl,
-    alignSelf: 'stretch',
-    justifyContent: 'center',
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: Colors.primary, borderRadius: Radii.button,
+    paddingVertical: 17, paddingHorizontal: Spacing.xl,
+    alignSelf: 'stretch', justifyContent: 'center',
+    shadowColor: Colors.primary, shadowOpacity: 0.3, shadowRadius: 12, shadowOffset: { width: 0, height: 4 },
   },
-  gateButtonText: { ...Typography.subtitle, color: Colors.surface },
-
-  // App collegata
-  tabBarWrapper: {
-    backgroundColor: Colors.background,
-    zIndex: 10,
-    shadowColor: '#000',
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 2,
-  },
+  gateButtonText: { ...Typography.subtitle, color: '#fff' },
+  // App
+  tabBarWrapper: { backgroundColor: Colors.background, zIndex: 10, borderBottomWidth: 1, borderBottomColor: Colors.border },
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   listContent: { paddingTop: Spacing.xs, paddingBottom: Spacing.xl },
   emptyContainer: { flex: 1 },
-  fabContainer: {
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    alignItems: 'flex-end',
-  },
+  fabContainer: { paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm, alignItems: 'flex-end' },
   fab: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 58, height: 58, borderRadius: 29,
     backgroundColor: Colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: Colors.primary,
-    shadowOpacity: 0.4,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 6,
+    justifyContent: 'center', alignItems: 'center',
+    shadowColor: Colors.primary, shadowOpacity: 0.35, shadowRadius: 14, shadowOffset: { width: 0, height: 6 }, elevation: 8,
   },
 });

@@ -12,25 +12,26 @@ export default function AppLayout() {
         tabBarStyle: {
           backgroundColor: Colors.surface,
           borderTopColor: Colors.border,
+          borderTopWidth: 1,
+          paddingBottom: 8,
+          paddingTop: 8,
+          height: 64,
         },
+        tabBarLabelStyle: { fontSize: 12, fontWeight: '600' },
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
           title: 'Desideri',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="heart-outline" size={size} color={color} />
-          ),
+          tabBarIcon: ({ color, size }) => <Ionicons name="heart" size={size} color={color} />,
         }}
       />
       <Tabs.Screen
         name="archive"
         options={{
           title: 'Archivio',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="checkmark-done-outline" size={size} color={color} />
-          ),
+          tabBarIcon: ({ color, size }) => <Ionicons name="checkmark-done" size={size} color={color} />,
         }}
       />
     </Tabs>

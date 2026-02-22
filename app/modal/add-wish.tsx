@@ -14,7 +14,6 @@ import { Colors, Typography, Spacing, Radii } from '../../constants/theme';
 export default function AddWishModal() {
   const router = useRouter();
   const { user } = useUser();
-
   const [title, setTitle] = useState('');
   const [notes, setNotes] = useState('');
   const [category, setCategory] = useState<CategoryKey | null>(null);
@@ -23,19 +22,9 @@ export default function AddWishModal() {
 
   async function pickImage() {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert('Permesso negato', 'Consenti l\'accesso alla galleria nelle impostazioni.');
-      return;
-    }
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: 'images',
-      allowsEditing: true,
-      aspect: [16, 9],
-      quality: 0.8,
-    });
-    if (!result.canceled) {
-      setImageUri(result.assets[0].uri);
-    }
+    if (status !== 'granted') { Alert.alert('Permesso negato', "Consenti l'accesso alla galleria."); return; }
+    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: 'images', allowsEditing: true, aspect: [16, 9], quality: 0.8 });
+    if (!result.canceled) setImageUri(result.assets[0].uri);
   }
 
   async function uploadImage(uri: string, wishId: string): Promise<string | null> {
@@ -44,79 +33,35 @@ export default function AddWishModal() {
       const path = `wishes/${wishId}.${ext}`;
       const response = await fetch(uri);
       const blob = await response.blob();
-      const { error } = await supabase.storage.from('wish-images').upload(path, blob, {
-        contentType: `image/${ext}`,
-        upsert: true,
-      });
+      const { error } = await supabase.storage.from('wish-images').upload(path, blob, { contentType: `image/${ext}`, upsert: true });
       if (error) return null;
       const { data } = supabase.storage.from('wish-images').getPublicUrl(path);
       return data.publicUrl;
-    } catch {
-      return null;
-    }
+    } catch { return null; }
   }
 
   async function handleSave() {
-    if (!title.trim()) {
-      Alert.alert('Titolo obbligatorio', 'Inserisci un titolo per il desiderio.');
-      return;
-    }
-    if (!category) {
-      Alert.alert('Categoria obbligatoria', 'Seleziona una categoria.');
-      return;
-    }
-    if (!user?.couple_id) {
-      Alert.alert(
-        'Partner non collegato',
-        'Devi prima collegare il tuo partner per aggiungere desideri condivisi.',
-      );
-      return;
-    }
-
+    if (!title.trim()) { Alert.alert('Titolo obbligatorio', 'Inserisci un titolo per il desiderio.'); return; }
+    if (!category) { Alert.alert('Categoria obbligatoria', 'Seleziona una categoria.'); return; }
+    if (!user?.couple_id) { Alert.alert('Partner non collegato', 'Devi prima collegare il tuo partner.'); return; }
     setSaving(true);
-
-    // Insert preliminare per avere l'id
-    const { data: inserted, error } = await supabase
-      .from('wishes')
-      .insert({
-        couple_id: user.couple_id,
-        category,
-        title: title.trim(),
-        description: notes.trim() || null,
-        created_by: user.id,
-      })
-      .select('id')
-      .single();
-
-    if (error || !inserted) {
-      Alert.alert('Errore', error?.message ?? 'Impossibile salvare.');
-      setSaving(false);
-      return;
-    }
-
-    // Upload immagine se presente
-    let imageUrl: string | null = null;
+    const { data: inserted, error } = await supabase.from('wishes').insert({
+      couple_id: user.couple_id, category, title: title.trim(),
+      description: notes.trim() || null, created_by: user.id,
+    }).select('id').single();
+    if (error || !inserted) { Alert.alert('Errore', error?.message ?? 'Impossibile salvare.'); setSaving(false); return; }
     if (imageUri) {
-      imageUrl = await uploadImage(imageUri, inserted.id);
-      if (imageUrl) {
-        await supabase.from('wishes').update({ image_url: imageUrl }).eq('id', inserted.id);
-      }
+      const imageUrl = await uploadImage(imageUri, inserted.id);
+      if (imageUrl) await supabase.from('wishes').update({ image_url: imageUrl }).eq('id', inserted.id);
     }
-
     setSaving(false);
     router.back();
   }
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
-      {/* Handle bar */}
+    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <View style={styles.handleBar} />
-
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
-        {/* Header */}
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Nuovo desiderio</Text>
           <TouchableOpacity onPress={() => router.back()} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
@@ -124,7 +69,6 @@ export default function AddWishModal() {
           </TouchableOpacity>
         </View>
 
-        {/* Categoria */}
         <Text style={styles.label}>Categoria *</Text>
         <View style={styles.categoryGrid}>
           {CATEGORIES.map((cat) => {
@@ -132,43 +76,30 @@ export default function AddWishModal() {
             return (
               <TouchableOpacity
                 key={cat.key}
-                style={[styles.categoryPill, active && { backgroundColor: cat.color, borderColor: cat.color }]}
+                style={[styles.categoryPill, active && { backgroundColor: cat.color + '18', borderColor: cat.color }]}
                 onPress={() => setCategory(cat.key)}
                 activeOpacity={0.8}
               >
-                <Ionicons name={cat.icon as any} size={16} color={active ? Colors.surface : cat.color} style={{ marginRight: 6 }} />
-                <Text style={[styles.categoryPillText, active && styles.categoryPillTextActive]}>
-                  {cat.label}
-                </Text>
+                <Ionicons name={cat.icon as any} size={15} color={active ? cat.color : Colors.textSecondary} style={{ marginRight: 6 }} />
+                <Text style={[styles.categoryPillText, active && { color: cat.color, fontWeight: '700' }]}>{cat.label}</Text>
               </TouchableOpacity>
             );
           })}
         </View>
 
-        {/* Titolo */}
         <Text style={styles.label}>Titolo *</Text>
         <TextInput
-          style={styles.input}
-          placeholder="Es. Cena da Niko Romito"
-          placeholderTextColor={Colors.textSecondary}
-          value={title}
-          onChangeText={setTitle}
-          maxLength={100}
+          style={styles.input} placeholder="Es. Cena da Niko Romito"
+          placeholderTextColor={Colors.textSecondary} value={title} onChangeText={setTitle} maxLength={100}
         />
 
-        {/* Note */}
         <Text style={styles.label}>Note</Text>
         <TextInput
-          style={[styles.input, styles.inputMultiline]}
-          placeholder="Descrizione, link, suggerimenti..."
-          placeholderTextColor={Colors.textSecondary}
-          value={notes}
-          onChangeText={setNotes}
-          multiline
-          numberOfLines={3}
+          style={[styles.input, styles.inputMultiline]} placeholder="Descrizione, link, suggerimenti..."
+          placeholderTextColor={Colors.textSecondary} value={notes} onChangeText={setNotes}
+          multiline numberOfLines={3}
         />
 
-        {/* Immagine */}
         <Text style={styles.label}>Immagine</Text>
         {imageUri ? (
           <View style={styles.imagePreviewContainer}>
@@ -179,22 +110,13 @@ export default function AddWishModal() {
           </View>
         ) : (
           <TouchableOpacity style={styles.imagePicker} onPress={pickImage}>
-            <Ionicons name="image-outline" size={28} color={Colors.textSecondary} />
+            <Ionicons name="image-outline" size={26} color={Colors.textSecondary} />
             <Text style={styles.imagePickerText}>Scegli dalla galleria</Text>
           </TouchableOpacity>
         )}
 
-        {/* Salva */}
-        <TouchableOpacity
-          style={[styles.saveButton, saving && styles.saveButtonDisabled]}
-          onPress={handleSave}
-          disabled={saving}
-        >
-          {saving ? (
-            <ActivityIndicator color={Colors.surface} />
-          ) : (
-            <Text style={styles.saveButtonText}>Salva desiderio</Text>
-          )}
+        <TouchableOpacity style={[styles.saveButton, saving && styles.saveButtonDisabled]} onPress={handleSave} disabled={saving} activeOpacity={0.85}>
+          {saving ? <ActivityIndicator color="#fff" /> : <Text style={styles.saveButtonText}>Salva desiderio</Text>}
         </TouchableOpacity>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -203,78 +125,37 @@ export default function AddWishModal() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.surface },
-  handleBar: {
-    width: 36,
-    height: 4,
-    backgroundColor: Colors.border,
-    borderRadius: 2,
-    alignSelf: 'center',
-    marginTop: Spacing.sm,
-    marginBottom: Spacing.xs,
-  },
-  scroll: { paddingHorizontal: Spacing.md, paddingBottom: 40 },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: Spacing.lg,
-    paddingTop: Spacing.sm,
-  },
+  handleBar: { width: 36, height: 4, backgroundColor: Colors.border, borderRadius: 2, alignSelf: 'center', marginTop: Spacing.sm, marginBottom: Spacing.xs },
+  scroll: { paddingHorizontal: Spacing.md, paddingBottom: 48 },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: Spacing.lg, paddingTop: Spacing.sm },
   headerTitle: { ...Typography.title, color: Colors.textPrimary },
-  label: {
-    ...Typography.caption,
-    fontWeight: '600',
-    color: Colors.textSecondary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginBottom: Spacing.xs,
-    marginTop: Spacing.md,
-  },
+  label: { fontSize: 11, fontWeight: '700', color: Colors.textSecondary, textTransform: 'uppercase', letterSpacing: 1, marginBottom: Spacing.xs, marginTop: Spacing.md },
   categoryGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.xs },
   categoryPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1.5,
-    borderColor: Colors.border,
-    borderRadius: Radii.full,
-    paddingVertical: 8,
-    paddingHorizontal: 14,
+    flexDirection: 'row', alignItems: 'center',
+    borderWidth: 1.5, borderColor: Colors.border,
+    borderRadius: Radii.full, paddingVertical: 8, paddingHorizontal: 14,
   },
-  categoryPillText: { ...Typography.body, color: Colors.textPrimary, fontWeight: '500' },
-  categoryPillTextActive: { color: Colors.surface, fontWeight: '600' },
+  categoryPillText: { ...Typography.body, color: Colors.textSecondary, fontWeight: '500' },
   input: {
-    backgroundColor: Colors.background,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: Radii.button,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: 13,
-    ...Typography.body,
-    color: Colors.textPrimary,
-    letterSpacing: 0,
-    fontFamily: 'System',
+    backgroundColor: Colors.background, borderWidth: 1.5, borderColor: Colors.border,
+    borderRadius: Radii.button, paddingHorizontal: Spacing.md, paddingVertical: 14,
+    fontSize: 15, fontWeight: '400', color: Colors.textPrimary,
   },
-  inputMultiline: { minHeight: 80, textAlignVertical: 'top', paddingTop: 13 },
+  inputMultiline: { minHeight: 88, textAlignVertical: 'top', paddingTop: 14 },
   imagePicker: {
-    borderWidth: 1.5,
-    borderColor: Colors.border,
-    borderStyle: 'dashed',
-    borderRadius: Radii.card,
-    paddingVertical: Spacing.lg,
-    alignItems: 'center',
-    gap: Spacing.xs,
+    borderWidth: 1.5, borderColor: Colors.border, borderStyle: 'dashed',
+    borderRadius: Radii.card, paddingVertical: Spacing.lg, alignItems: 'center', gap: Spacing.xs,
   },
   imagePickerText: { ...Typography.body, color: Colors.textSecondary },
   imagePreviewContainer: { position: 'relative' },
   imagePreview: { width: '100%', aspectRatio: 16 / 9, borderRadius: Radii.card },
   removeImage: { position: 'absolute', top: 8, right: 8 },
   saveButton: {
-    backgroundColor: Colors.primary,
-    borderRadius: Radii.button,
-    paddingVertical: 16,
-    alignItems: 'center',
-    marginTop: Spacing.xl,
+    backgroundColor: Colors.primary, borderRadius: Radii.button,
+    paddingVertical: 17, alignItems: 'center', marginTop: Spacing.xl,
+    shadowColor: Colors.primary, shadowOpacity: 0.3, shadowRadius: 12, shadowOffset: { width: 0, height: 4 },
   },
-  saveButtonDisabled: { opacity: 0.6 },
-  saveButtonText: { ...Typography.subtitle, color: Colors.surface },
+  saveButtonDisabled: { opacity: 0.5 },
+  saveButtonText: { ...Typography.subtitle, color: '#fff' },
 });

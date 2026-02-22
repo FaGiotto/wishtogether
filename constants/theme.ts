@@ -1,20 +1,21 @@
 export const Colors = {
-  primary: '#6C63FF',
-  secondary: '#FF6584',
-  background: '#F8F8F8',
+  primary: '#7C5CFC',
+  secondary: '#FF6B9D',
+  background: '#F8F7FF',
   surface: '#FFFFFF',
+  surface2: '#F3F0FF',
   textPrimary: '#1A1A2E',
-  textSecondary: '#6B7280',
+  textSecondary: '#8892A4',
   success: '#10B981',
-  border: '#E5E7EB',
   error: '#EF4444',
+  border: '#EDE8FF',
 };
 
 export const Typography = {
-  title: { fontSize: 22, fontWeight: '700' as const },
-  subtitle: { fontSize: 16, fontWeight: '600' as const },
-  body: { fontSize: 14, fontWeight: '400' as const },
-  caption: { fontSize: 12, fontWeight: '400' as const, color: Colors.textSecondary },
+  title: { fontSize: 26, fontWeight: '700' as const },
+  subtitle: { fontSize: 17, fontWeight: '600' as const },
+  body: { fontSize: 15, fontWeight: '400' as const },
+  caption: { fontSize: 13, fontWeight: '400' as const, color: '#8892A4' },
 };
 
 export const Spacing = {
@@ -26,7 +27,7 @@ export const Spacing = {
 };
 
 export const Radii = {
-  card: 12,
-  button: 8,
+  card: 20,
+  button: 50,
   full: 9999,
 };

@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity,
-  StyleSheet, KeyboardAvoidingView, Platform, Alert,
+  StyleSheet, KeyboardAvoidingView, Platform, Alert, ActivityIndicator,
 } from 'react-native';
 import { Link } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../../lib/supabase';
 import { Colors, Typography, Spacing, Radii } from '../../constants/theme';
+import GradientBackground from '../../components/GradientBackground';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
@@ -24,73 +26,114 @@ export default function LoginScreen() {
   }
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
-      <View style={styles.inner}>
-        <Text style={styles.title}>WishTogether</Text>
-        <Text style={styles.subtitle}>Accedi al tuo account</Text>
+    <GradientBackground>
+      <KeyboardAvoidingView
+        style={styles.flex}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <View style={styles.inner}>
+          {/* Logo */}
+          <View style={styles.logoWrap}>
+            <View style={styles.logoCircle}>
+              <Ionicons name="heart" size={30} color={Colors.secondary} />
+            </View>
+            <Text style={styles.appName}>WishTogether</Text>
+            <Text style={styles.tagline}>i vostri desideri, in un posto solo</Text>
+          </View>
 
-        <TextInput
-          style={styles.input}
-          placeholder="Email"
-          placeholderTextColor={Colors.textSecondary}
-          autoCapitalize="none"
-          keyboardType="email-address"
-          value={email}
-          onChangeText={setEmail}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Password"
-          placeholderTextColor={Colors.textSecondary}
-          secureTextEntry
-          value={password}
-          onChangeText={setPassword}
-        />
+          {/* Form */}
+          <View style={styles.form}>
+            <TextInput
+              style={styles.input}
+              placeholder="Email"
+              placeholderTextColor={Colors.textSecondary}
+              autoCapitalize="none"
+              keyboardType="email-address"
+              value={email}
+              onChangeText={setEmail}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Password"
+              placeholderTextColor={Colors.textSecondary}
+              secureTextEntry
+              value={password}
+              onChangeText={setPassword}
+            />
 
-        <TouchableOpacity style={styles.button} onPress={handleLogin} disabled={loading}>
-          <Text style={styles.buttonText}>{loading ? 'Accesso...' : 'Accedi'}</Text>
-        </TouchableOpacity>
+            <TouchableOpacity style={styles.button} onPress={handleLogin} disabled={loading} activeOpacity={0.85}>
+              {loading
+                ? <ActivityIndicator color="#fff" />
+                : <Text style={styles.buttonText}>Accedi</Text>}
+            </TouchableOpacity>
+          </View>
 
-        <Link href="/(auth)/register" asChild>
-          <TouchableOpacity style={styles.linkButton}>
-            <Text style={styles.linkText}>Non hai un account? <Text style={styles.linkBold}>Registrati</Text></Text>
-          </TouchableOpacity>
-        </Link>
-      </View>
-    </KeyboardAvoidingView>
+          <Link href="/(auth)/register" asChild>
+            <TouchableOpacity style={styles.linkButton}>
+              <Text style={styles.linkText}>
+                Non hai un account?{'  '}
+                <Text style={styles.linkBold}>Registrati</Text>
+              </Text>
+            </TouchableOpacity>
+          </Link>
+        </View>
+      </KeyboardAvoidingView>
+    </GradientBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
+  flex: { flex: 1 },
   inner: { flex: 1, justifyContent: 'center', paddingHorizontal: Spacing.lg },
-  title: { ...Typography.title, fontSize: 32, color: Colors.primary, textAlign: 'center', marginBottom: Spacing.xs },
-  subtitle: { ...Typography.body, color: Colors.textSecondary, textAlign: 'center', marginBottom: Spacing.xl },
+  logoWrap: { alignItems: 'center', marginBottom: 40 },
+  logoCircle: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: Colors.surface,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: Spacing.md,
+    shadowColor: Colors.secondary,
+    shadowOpacity: 0.2,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 4,
+  },
+  appName: {
+    fontSize: 30,
+    fontWeight: '700',
+    color: Colors.textPrimary,
+    marginBottom: 6,
+  },
+  tagline: { ...Typography.body, color: Colors.textSecondary },
+  form: { marginBottom: Spacing.lg },
   input: {
     backgroundColor: Colors.surface,
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: Colors.border,
     borderRadius: Radii.button,
     paddingHorizontal: Spacing.md,
-    paddingVertical: 14,
+    paddingVertical: 15,
     marginBottom: Spacing.sm,
-    ...Typography.body,
+    fontSize: 15,
+    fontWeight: '400',
     color: Colors.textPrimary,
-    fontFamily: 'System',
-    letterSpacing: 0,
   },
   button: {
     backgroundColor: Colors.primary,
     borderRadius: Radii.button,
-    paddingVertical: 16,
+    paddingVertical: 17,
     alignItems: 'center',
     marginTop: Spacing.sm,
+    shadowColor: Colors.primary,
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 6,
   },
-  buttonText: { ...Typography.subtitle, color: Colors.surface },
-  linkButton: { marginTop: Spacing.md, alignItems: 'center' },
+  buttonText: { ...Typography.subtitle, color: '#fff' },
+  linkButton: { alignItems: 'center', marginTop: Spacing.md },
   linkText: { ...Typography.body, color: Colors.textSecondary },
   linkBold: { color: Colors.primary, fontWeight: '600' },
 });
