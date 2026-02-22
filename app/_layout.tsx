@@ -1,35 +1,43 @@
-import { useEffect, useState } from 'react';
-import { Stack } from 'expo-router';
-import { Session } from '@supabase/supabase-js';
-import { supabase } from '../lib/supabase';
+import { useEffect } from 'react';
+import { Stack, useRouter, useSegments } from 'expo-router';
+import { UserProvider, useUser } from '../lib/context/UserContext';
 
-export default function RootLayout() {
-  const [session, setSession] = useState<Session | null>(null);
-  const [initialized, setInitialized] = useState(false);
+function RootLayoutNav() {
+  const { user, session, loading } = useUser();
+  const router = useRouter();
+  const segments = useSegments();
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setInitialized(true);
-    });
+    if (loading) return;
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-    });
+    const inAuth = segments[0] === '(auth)';
 
-    return () => subscription.unsubscribe();
-  }, []);
+    if (!session) {
+      if (!inAuth) router.replace('/(auth)/login');
+    } else {
+      if (inAuth) router.replace('/(app)');
+    }
+  }, [session, loading, segments]);
 
-  if (!initialized) return null;
+  if (loading) return null;
 
   return (
     <Stack screenOptions={{ headerShown: false }}>
-      {session ? (
-        <Stack.Screen name="(app)" />
-      ) : (
-        <Stack.Screen name="(auth)" />
-      )}
+      <Stack.Screen name="(auth)" />
+      <Stack.Screen name="(app)" />
       <Stack.Screen name="wish/[id]" options={{ presentation: 'card' }} />
+      <Stack.Screen
+        name="modal/add-wish"
+        options={{ presentation: 'modal', headerShown: false }}
+      />
     </Stack>
+  );
+}
+
+export default function RootLayout() {
+  return (
+    <UserProvider>
+      <RootLayoutNav />
+    </UserProvider>
   );
 }

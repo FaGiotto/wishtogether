@@ -1,15 +1,72 @@
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, FlatList, StyleSheet, ActivityIndicator } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useState, useCallback } from 'react';
+import { useFocusEffect } from 'expo-router';
+import { useUser } from '../../lib/context/UserContext';
+import { useWishes } from '../../lib/hooks/useWishes';
+import WishCard from '../../components/WishCard';
+import WishActionSheet from '../../components/WishActionSheet';
+import EmptyState from '../../components/EmptyState';
+import { Wish } from '../../types';
 import { Colors, Typography, Spacing } from '../../constants/theme';
 
 export default function ArchiveScreen() {
+  const { user } = useUser();
+  const { wishes, loading, refresh } = useWishes(user?.couple_id, 'all', true);
+  const [selectedWish, setSelectedWish] = useState<Wish | null>(null);
+
+  useFocusEffect(
+    useCallback(() => {
+      refresh();
+    }, [refresh]),
+  );
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.text}>Archivio — desideri completati (Fase 2)</Text>
-    </View>
+    <SafeAreaView style={styles.container} edges={['top']}>
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Archivio</Text>
+        <Text style={styles.headerSubtitle}>{wishes.length} completati</Text>
+      </View>
+
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator color={Colors.primary} size="large" />
+        </View>
+      ) : (
+        <FlatList
+          data={wishes}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => (
+            <WishCard wish={item} onPress={() => setSelectedWish(item)} />
+          )}
+          contentContainerStyle={[
+            styles.listContent,
+            wishes.length === 0 && styles.emptyContainer,
+          ]}
+          ListEmptyComponent={<EmptyState isDone />}
+          showsVerticalScrollIndicator={false}
+        />
+      )}
+
+      <WishActionSheet
+        wish={selectedWish}
+        onClose={() => setSelectedWish(null)}
+        onRefresh={refresh}
+      />
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background, justifyContent: 'center', alignItems: 'center', padding: Spacing.lg },
-  text: { ...Typography.body, color: Colors.textSecondary },
+  container: { flex: 1, backgroundColor: Colors.background },
+  header: {
+    paddingHorizontal: Spacing.md,
+    paddingTop: Spacing.sm,
+    paddingBottom: Spacing.xs,
+  },
+  headerTitle: { ...Typography.title, color: Colors.textPrimary },
+  headerSubtitle: { ...Typography.caption, marginTop: 2 },
+  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  listContent: { paddingTop: Spacing.xs, paddingBottom: 40 },
+  emptyContainer: { flex: 1 },
 });

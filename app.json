@@ -13,8 +13,9 @@
       "resizeMode": "contain",
       "backgroundColor": "#6C63FF"
     },
-    "ios": {
-      "supportsTablet": false,
+   "ios": {
+      "supportsTablet": true,
+      "newArchEnabled": false,
       "bundleIdentifier": "com.wishtogether.app"
     },
     "android": {

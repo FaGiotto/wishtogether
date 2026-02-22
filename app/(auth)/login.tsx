@@ -79,6 +79,8 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.sm,
     ...Typography.body,
     color: Colors.textPrimary,
+    fontFamily: 'System',
+    letterSpacing: 0,
   },
   button: {
     backgroundColor: Colors.primary,

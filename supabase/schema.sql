@@ -1,6 +1,7 @@
 -- =============================================================
 -- WishTogether — Schema Supabase
 -- Esegui questo file nell'SQL Editor di Supabase
+-- È idempotente: può essere rieseguito senza errori
 -- =============================================================
 
 -- Abilita UUID extension
@@ -10,23 +11,21 @@ create extension if not exists "pgcrypto";
 -- TABELLE
 -- =============================================================
 
--- Tabella users (estende auth.users di Supabase)
 create table if not exists public.users (
-  id          uuid primary key references auth.users(id) on delete cascade,
-  email       text not null,
+  id           uuid primary key references auth.users(id) on delete cascade,
+  email        text not null,
   display_name text not null,
-  avatar_url  text,
-  partner_id  uuid references public.users(id) on delete set null,
-  couple_id   text,               -- chiave condivisa della coppia, es. "uuid1_uuid2"
-  invite_code text unique,        -- codice a 6 char per il collegamento
-  push_token  text,               -- token Expo per le notifiche push
-  created_at  timestamptz not null default now()
+  avatar_url   text,
+  partner_id   uuid references public.users(id) on delete set null,
+  couple_id    text,
+  invite_code  text unique,
+  push_token   text,
+  created_at   timestamptz not null default now()
 );
 
--- Tabella wishes
 create table if not exists public.wishes (
   id          uuid primary key default gen_random_uuid(),
-  couple_id   text not null,      -- corrisponde a users.couple_id
+  couple_id   text not null,
   category    text not null check (category in ('places','restaurants','movies','games','events')),
   title       text not null,
   description text,
@@ -38,56 +37,57 @@ create table if not exists public.wishes (
   created_at  timestamptz not null default now()
 );
 
--- Tabella comments
 create table if not exists public.comments (
-  id          uuid primary key default gen_random_uuid(),
-  wish_id     uuid not null references public.wishes(id) on delete cascade,
-  user_id     uuid not null references public.users(id) on delete cascade,
-  text        text not null,
-  created_at  timestamptz not null default now()
+  id         uuid primary key default gen_random_uuid(),
+  wish_id    uuid not null references public.wishes(id) on delete cascade,
+  user_id    uuid not null references public.users(id) on delete cascade,
+  text       text not null,
+  created_at timestamptz not null default now()
 );
 
--- Indici per performance
-create index if not exists wishes_couple_id_idx   on public.wishes(couple_id);
-create index if not exists wishes_is_done_idx     on public.wishes(is_done);
-create index if not exists comments_wish_id_idx   on public.comments(wish_id);
+-- Indici
+create index if not exists wishes_couple_id_idx  on public.wishes(couple_id);
+create index if not exists wishes_is_done_idx    on public.wishes(is_done);
+create index if not exists comments_wish_id_idx  on public.comments(wish_id);
 
 -- =============================================================
--- FUNZIONE: link_couple
--- Collega due utenti come coppia in modo atomico
+-- FUNZIONI
 -- =============================================================
+
 create or replace function public.link_couple(
   p_user_id    uuid,
   p_partner_id uuid,
   p_couple_id  text
-) returns void
-language plpgsql
-security definer
-as $$
+) returns void language plpgsql security definer as $$
 begin
-  -- Aggiorna entrambi gli utenti con il couple_id condiviso e partner_id incrociato
   update public.users
-  set couple_id   = p_couple_id,
-      partner_id  = p_partner_id,
-      invite_code = null          -- invalida il codice dopo l'uso
+  set couple_id = p_couple_id, partner_id = p_partner_id, invite_code = null
   where id = p_user_id;
 
   update public.users
-  set couple_id   = p_couple_id,
-      partner_id  = p_user_id,
-      invite_code = null
+  set couple_id = p_couple_id, partner_id = p_user_id, invite_code = null
   where id = p_partner_id;
 end;
 $$;
 
--- =============================================================
--- TRIGGER: crea profilo utente al signup
--- =============================================================
+create or replace function public.unlink_couple(
+  p_user_id uuid
+) returns void language plpgsql security definer as $$
+declare
+  v_partner_id uuid;
+begin
+  select partner_id into v_partner_id from public.users where id = p_user_id;
+
+  update public.users set couple_id = null, partner_id = null where id = p_user_id;
+
+  if v_partner_id is not null then
+    update public.users set couple_id = null, partner_id = null where id = v_partner_id;
+  end if;
+end;
+$$;
+
 create or replace function public.handle_new_user()
-returns trigger
-language plpgsql
-security definer
-as $$
+returns trigger language plpgsql security definer as $$
 begin
   insert into public.users (id, email, display_name)
   values (
@@ -99,9 +99,7 @@ begin
 end;
 $$;
 
--- Drop trigger se esiste già (idempotente)
 drop trigger if exists on_auth_user_created on auth.users;
-
 create trigger on_auth_user_created
   after insert on auth.users
   for each row execute function public.handle_new_user();
@@ -118,25 +116,27 @@ alter table public.comments enable row level security;
 -- POLICIES: users
 -- -----------------------------------------------------------
 
--- Ogni utente può leggere solo il proprio profilo e quello del partner
+drop policy if exists "users: leggi se sei tu o il partner"  on public.users;
+drop policy if exists "users: cerca per invite_code"         on public.users;
+drop policy if exists "users: aggiorna solo il tuo"          on public.users;
+drop policy if exists "users: nessun insert diretto"         on public.users;
+
 create policy "users: leggi se sei tu o il partner"
   on public.users for select
   using (
     auth.uid() = id
     or auth.uid() = partner_id
-    or id in (
-      select partner_id from public.users where id = auth.uid()
-    )
   );
 
--- Ogni utente può aggiornare solo il proprio profilo
+create policy "users: cerca per invite_code"
+  on public.users for select
+  using (invite_code is not null);
+
 create policy "users: aggiorna solo il tuo"
   on public.users for update
   using (auth.uid() = id)
   with check (auth.uid() = id);
 
--- Insert gestito solo dal trigger (security definer), non serve policy insert pubblica
--- ma per sicurezza la blocchiamo
 create policy "users: nessun insert diretto"
   on public.users for insert
   with check (false);
@@ -145,14 +145,15 @@ create policy "users: nessun insert diretto"
 -- POLICIES: wishes
 -- -----------------------------------------------------------
 
--- La coppia può leggere tutti i propri desideri
+drop policy if exists "wishes: leggi se sei nella coppia"    on public.wishes;
+drop policy if exists "wishes: inserisci se sei nella coppia" on public.wishes;
+drop policy if exists "wishes: aggiorna se sei nella coppia" on public.wishes;
+drop policy if exists "wishes: cancella solo i tuoi"         on public.wishes;
+
 create policy "wishes: leggi se sei nella coppia"
   on public.wishes for select
-  using (
-    couple_id = (select couple_id from public.users where id = auth.uid())
-  );
+  using (couple_id = (select couple_id from public.users where id = auth.uid()));
 
--- Qualunque membro della coppia può inserire desideri
 create policy "wishes: inserisci se sei nella coppia"
   on public.wishes for insert
   with check (
@@ -160,17 +161,11 @@ create policy "wishes: inserisci se sei nella coppia"
     and created_by = auth.uid()
   );
 
--- Qualunque membro della coppia può aggiornare i desideri (es. segna come fatto)
 create policy "wishes: aggiorna se sei nella coppia"
   on public.wishes for update
-  using (
-    couple_id = (select couple_id from public.users where id = auth.uid())
-  )
-  with check (
-    couple_id = (select couple_id from public.users where id = auth.uid())
-  );
+  using (couple_id = (select couple_id from public.users where id = auth.uid()))
+  with check (couple_id = (select couple_id from public.users where id = auth.uid()));
 
--- Solo il creatore può cancellare il proprio desiderio
 create policy "wishes: cancella solo i tuoi"
   on public.wishes for delete
   using (created_by = auth.uid());
@@ -179,7 +174,10 @@ create policy "wishes: cancella solo i tuoi"
 -- POLICIES: comments
 -- -----------------------------------------------------------
 
--- La coppia può leggere i commenti dei propri desideri
+drop policy if exists "comments: leggi se sei nella coppia"    on public.comments;
+drop policy if exists "comments: inserisci se sei nella coppia" on public.comments;
+drop policy if exists "comments: cancella solo i tuoi"          on public.comments;
+
 create policy "comments: leggi se sei nella coppia"
   on public.comments for select
   using (
@@ -189,7 +187,6 @@ create policy "comments: leggi se sei nella coppia"
     )
   );
 
--- Qualunque membro della coppia può commentare
 create policy "comments: inserisci se sei nella coppia"
   on public.comments for insert
   with check (
@@ -200,15 +197,28 @@ create policy "comments: inserisci se sei nella coppia"
     )
   );
 
--- Solo l'autore può cancellare il proprio commento
 create policy "comments: cancella solo i tuoi"
   on public.comments for delete
   using (user_id = auth.uid());
 
 -- =============================================================
--- REALTIME: abilita per wishes e comments
+-- REALTIME
 -- =============================================================
 
--- Inserisci nella publication di realtime
-alter publication supabase_realtime add table public.wishes;
-alter publication supabase_realtime add table public.comments;
+do $$
+begin
+  alter publication supabase_realtime add table public.users;
+exception when others then null;
+end $$;
+
+do $$
+begin
+  alter publication supabase_realtime add table public.wishes;
+exception when others then null;
+end $$;
+
+do $$
+begin
+  alter publication supabase_realtime add table public.comments;
+exception when others then null;
+end $$;
