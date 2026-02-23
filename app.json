@@ -11,7 +11,7 @@
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#6C63FF"
+      "backgroundColor": "#7C5CFC"
     },
    "ios": {
       "supportsTablet": true,
@@ -21,7 +21,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#6C63FF"
+        "backgroundColor": "#7C5CFC"
       },
       "package": "com.wishtogether.app",
       "edgeToEdgeEnabled": true,
@@ -37,7 +37,7 @@
         "expo-notifications",
         {
           "icon": "./assets/icon.png",
-          "color": "#6C63FF"
+          "color": "#7C5CFC"
         }
       ],
       [
