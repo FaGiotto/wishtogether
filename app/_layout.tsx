@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { Stack, useRouter, useSegments } from 'expo-router';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { UserProvider, useUser } from '../lib/context/UserContext';
 import { registerAndStorePushToken } from '../lib/hooks/usePushNotifications';
 
@@ -43,8 +44,10 @@ function RootLayoutNav() {
 
 export default function RootLayout() {
   return (
-    <UserProvider>
-      <RootLayoutNav />
-    </UserProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <UserProvider>
+        <RootLayoutNav />
+      </UserProvider>
+    </GestureHandlerRootView>
   );
 }

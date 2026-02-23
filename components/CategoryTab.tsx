@@ -1,4 +1,4 @@
-import { ScrollView, TouchableOpacity, Text, StyleSheet } from 'react-native';
+import { ScrollView, TouchableOpacity, Text, View, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { CATEGORIES, CategoryKey, ALL_CATEGORIES_KEY } from '../constants/categories';
 import { Colors, Spacing, Radii } from '../constants/theme';
@@ -23,7 +23,7 @@ export default function CategoryTab({ selected, onSelect }: Props) {
         activeOpacity={0.75}
       >
         {isActive(ALL_CATEGORIES_KEY) && (
-          <Ionicons name="apps" size={13} color="#fff" style={styles.chipIcon} />
+          <Ionicons name="apps" size={15} color="#fff" style={styles.chipIcon} />
         )}
         <Text style={[styles.chipText, isActive(ALL_CATEGORIES_KEY) && styles.chipTextActive]}>
           Tutti
@@ -37,13 +37,13 @@ export default function CategoryTab({ selected, onSelect }: Props) {
             key={cat.key}
             style={[
               styles.chip,
-              active && { backgroundColor: cat.color, borderColor: cat.color },
+              active && { backgroundColor: Colors.primary, borderColor: Colors.primary },
             ]}
             onPress={() => onSelect(cat.key)}
             activeOpacity={0.75}
           >
             {active && (
-              <Ionicons name={cat.icon as any} size={13} color="#fff" style={styles.chipIcon} />
+              <Ionicons name={cat.icon as any} size={15} color="#fff" style={styles.chipIcon} />
             )}
             <Text style={[styles.chipText, active && styles.chipTextActive]}>
               {cat.label}
@@ -65,6 +65,7 @@ const styles = StyleSheet.create({
   chip: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     backgroundColor: Colors.surface,
     borderRadius: Radii.full,
     borderWidth: 1.5,

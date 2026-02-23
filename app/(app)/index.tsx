@@ -19,7 +19,7 @@ export default function HomeScreen() {
   const { user, refresh } = useUser();
   const [selectedCategory, setSelectedCategory] = useState<CategoryKey | typeof ALL_CATEGORIES_KEY>(ALL_CATEGORIES_KEY);
   const [sheetVisible, setSheetVisible] = useState(false);
-  const { wishes, loading, refresh: refreshWishes } = useWishes(user?.couple_id, selectedCategory, false);
+  const { wishes, loading, refresh: refreshWishes, removeWish } = useWishes(user?.couple_id, selectedCategory, false);
   const activeCategory = CATEGORIES.find((c) => c.key === selectedCategory);
 
   useFocusEffect(
@@ -93,7 +93,7 @@ export default function HomeScreen() {
             <View style={styles.gateCard}>
               {/* Icona */}
               <View style={styles.gateIconWrap}>
-                <Ionicons name="people" size={48} color={Colors.primary} />
+                <Ionicons name="people" size={48} color="#fff" />
                 <View style={styles.gateHeartBadge}>
                   <Ionicons name="heart" size={16} color="#fff" />
                 </View>
@@ -108,9 +108,9 @@ export default function HomeScreen() {
               {/* Categoria pills decorative */}
               <View style={styles.gatePills}>
                 {CATEGORIES.map((cat) => (
-                  <View key={cat.key} style={[styles.gatePill, { backgroundColor: cat.color + '18', borderColor: cat.color + '40' }]}>
-                    <Ionicons name={cat.icon as any} size={13} color={cat.color} style={{ marginRight: 4 }} />
-                    <Text style={[styles.gatePillText, { color: cat.color }]}>{cat.label}</Text>
+                  <View key={cat.key} style={styles.gatePill}>
+                    <Ionicons name={cat.icon as any} size={13} color={Colors.hearts} style={{ marginRight: 4 }} />
+                    <Text style={styles.gatePillText}>{cat.label}</Text>
                   </View>
                 ))}
               </View>
@@ -150,7 +150,18 @@ export default function HomeScreen() {
           data={wishes}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
-            <WishCard wish={item} onPress={() => router.push(`/wish/${item.id}`)} />
+            <WishCard
+              wish={item}
+              onPress={() => router.push(`/wish/${item.id}`)}
+              onMarkDone={async () => {
+                removeWish(item.id);
+                await supabase.from('wishes').update({ is_done: true, done_at: new Date().toISOString() }).eq('id', item.id);
+              }}
+              onDelete={async () => {
+                removeWish(item.id);
+                await supabase.from('wishes').delete().eq('id', item.id);
+              }}
+            />
           )}
           contentContainerStyle={[
             styles.listContent,
@@ -194,39 +205,40 @@ const styles = StyleSheet.create({
   // Gate
   gateContainer: { flex: 1, justifyContent: 'center', paddingHorizontal: Spacing.md, paddingBottom: Spacing.xl },
   gateCard: {
-    backgroundColor: 'rgba(255,255,255,0.9)',
+    backgroundColor: '#16151F',
     borderRadius: 28, padding: Spacing.xl, alignItems: 'center',
-    borderWidth: 1, borderColor: Colors.border,
-    shadowColor: Colors.primary, shadowOpacity: 0.12, shadowRadius: 24, shadowOffset: { width: 0, height: 8 }, elevation: 6,
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
+    shadowColor: '#000', shadowOpacity: 0.4, shadowRadius: 28, shadowOffset: { width: 0, height: 10 }, elevation: 10,
   },
   gateIconWrap: {
     width: 88, height: 88, borderRadius: 44,
-    backgroundColor: Colors.primary + '15',
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.12)',
     justifyContent: 'center', alignItems: 'center', marginBottom: Spacing.lg,
   },
   gateHeartBadge: {
     position: 'absolute', bottom: 4, right: 4,
     width: 26, height: 26, borderRadius: 13,
-    backgroundColor: Colors.secondary,
+    backgroundColor: Colors.primary,
     justifyContent: 'center', alignItems: 'center',
   },
-  gateTitle: { fontSize: 24, fontWeight: '700', color: Colors.textPrimary, textAlign: 'center', marginBottom: Spacing.sm },
-  gateSubtitle: { ...Typography.body, color: Colors.textSecondary, textAlign: 'center', lineHeight: 22, marginBottom: Spacing.lg },
+  gateTitle: { fontSize: 24, fontWeight: '700', color: '#fff', textAlign: 'center', marginBottom: Spacing.sm },
+  gateSubtitle: { ...Typography.body, color: 'rgba(255,255,255,0.55)', textAlign: 'center', lineHeight: 22, marginBottom: Spacing.lg },
   gatePills: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 8, marginBottom: Spacing.xl },
-  gatePill: { flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderRadius: Radii.full, paddingVertical: 6, paddingHorizontal: 11 },
-  gatePillText: { fontSize: 12, fontWeight: '700' },
+  gatePill: { flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.12)', borderRadius: Radii.full, paddingVertical: 6, paddingHorizontal: 11, backgroundColor: 'rgba(255,255,255,0.06)' },
+  gatePillText: { fontSize: 12, fontWeight: '700', color: 'rgba(255,255,255,0.75)' },
   gateButton: {
     flexDirection: 'row', alignItems: 'center',
     backgroundColor: Colors.primary, borderRadius: Radii.button,
     paddingVertical: 17, paddingHorizontal: Spacing.xl,
     alignSelf: 'stretch', justifyContent: 'center',
-    shadowColor: Colors.primary, shadowOpacity: 0.3, shadowRadius: 12, shadowOffset: { width: 0, height: 4 },
+    shadowColor: Colors.primary, shadowOpacity: 0.4, shadowRadius: 14, shadowOffset: { width: 0, height: 4 },
   },
   gateButtonText: { ...Typography.subtitle, color: '#fff' },
   // App
   tabBarWrapper: { backgroundColor: Colors.background, zIndex: 10 },
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  listContent: { paddingTop: Spacing.xs, paddingBottom: Spacing.xl },
+  listContent: { paddingTop: Spacing.md, paddingBottom: Spacing.xl },
   emptyContainer: { flex: 1 },
   fabContainer: { position: 'absolute', bottom: 20, right: 20 },
   fab: {

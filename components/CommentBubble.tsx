@@ -53,7 +53,7 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     marginBottom: 2,
     textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    letterSpacing: 0,
   },
   text: {
     fontSize: 15,

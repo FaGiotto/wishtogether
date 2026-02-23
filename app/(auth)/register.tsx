@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import {
-  View, Text, TextInput, TouchableOpacity,
-  StyleSheet, KeyboardAvoidingView, Platform, Alert, ActivityIndicator,
+  View, Text, TouchableOpacity,
+  StyleSheet, KeyboardAvoidingView, Platform, Alert, ActivityIndicator, ScrollView,
 } from 'react-native';
 import { Link } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../../lib/supabase';
 import { Colors, Typography, Spacing, Radii } from '../../constants/theme';
 import GradientBackground from '../../components/GradientBackground';
+import FloatingLabelInput from '../../components/FloatingLabelInput';
 
 export default function RegisterScreen() {
   const [name, setName] = useState('');
@@ -40,40 +41,35 @@ export default function RegisterScreen() {
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <View style={styles.inner}>
+        <ScrollView contentContainerStyle={styles.inner} keyboardShouldPersistTaps="handled">
           <View style={styles.logoWrap}>
             <View style={styles.logoCircle}>
-              <Ionicons name="heart" size={30} color={Colors.secondary} />
+              <Ionicons name="heart" size={30} color={Colors.primary} />
             </View>
             <Text style={styles.appName}>Crea account</Text>
             <Text style={styles.tagline}>inizia a condividere i tuoi desideri</Text>
           </View>
 
           <View style={styles.form}>
-            <TextInput
-              style={styles.input}
-              placeholder="Il tuo nome"
-              placeholderTextColor={Colors.textSecondary}
-              autoCapitalize="words"
+            <FloatingLabelInput
+              label="Il tuo nome"
               value={name}
               onChangeText={setName}
+              autoCapitalize="words"
+              autoCorrect={false}
             />
-            <TextInput
-              style={styles.input}
-              placeholder="Email"
-              placeholderTextColor={Colors.textSecondary}
-              autoCapitalize="none"
-              keyboardType="email-address"
+            <FloatingLabelInput
+              label="Email"
               value={email}
               onChangeText={setEmail}
+              autoCapitalize="none"
+              keyboardType="email-address"
             />
-            <TextInput
-              style={styles.input}
-              placeholder="Password (min. 6 caratteri)"
-              placeholderTextColor={Colors.textSecondary}
-              secureTextEntry
+            <FloatingLabelInput
+              label="Password (min. 6 caratteri)"
               value={password}
               onChangeText={setPassword}
+              secureTextEntry
             />
 
             <TouchableOpacity style={styles.button} onPress={handleRegister} disabled={loading} activeOpacity={0.85}>
@@ -91,7 +87,7 @@ export default function RegisterScreen() {
               </Text>
             </TouchableOpacity>
           </Link>
-        </View>
+        </ScrollView>
       </KeyboardAvoidingView>
     </GradientBackground>
   );
@@ -99,7 +95,7 @@ export default function RegisterScreen() {
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  inner: { flex: 1, justifyContent: 'center', paddingHorizontal: Spacing.lg },
+  inner: { flexGrow: 1, justifyContent: 'center', paddingHorizontal: Spacing.lg, paddingVertical: Spacing.xl },
   logoWrap: { alignItems: 'center', marginBottom: 40 },
   logoCircle: {
     width: 72,
@@ -109,8 +105,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: Spacing.md,
-    shadowColor: Colors.secondary,
-    shadowOpacity: 0.2,
+    shadowColor: Colors.primary,
+    shadowOpacity: 0.25,
     shadowRadius: 16,
     shadowOffset: { width: 0, height: 4 },
     elevation: 4,
@@ -123,18 +119,6 @@ const styles = StyleSheet.create({
   },
   tagline: { ...Typography.body, color: Colors.textSecondary },
   form: { marginBottom: Spacing.lg },
-  input: {
-    backgroundColor: Colors.surface,
-    borderWidth: 1.5,
-    borderColor: Colors.border,
-    borderRadius: Radii.button,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: 15,
-    marginBottom: Spacing.sm,
-    fontSize: 15,
-    fontWeight: '400',
-    color: Colors.textPrimary,
-  },
   button: {
     backgroundColor: Colors.primary,
     borderRadius: Radii.button,

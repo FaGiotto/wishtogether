@@ -33,8 +33,8 @@ const styles = StyleSheet.create({
     width: 280,
     height: 280,
     borderRadius: 140,
-    backgroundColor: '#C4B5FD',
-    opacity: 0.35,
+    backgroundColor: '#A78BFA',
+    opacity: 0.22,
   },
   blobBottomRight: {
     position: 'absolute',
@@ -43,8 +43,8 @@ const styles = StyleSheet.create({
     width: 260,
     height: 260,
     borderRadius: 130,
-    backgroundColor: '#FBCFE8',
-    opacity: 0.4,
+    backgroundColor: '#C4B5FD',
+    opacity: 0.28,
   },
   blobCenter: {
     position: 'absolute',
@@ -53,7 +53,7 @@ const styles = StyleSheet.create({
     width: 180,
     height: 180,
     borderRadius: 90,
-    backgroundColor: '#BAE6FD',
-    opacity: 0.2,
+    backgroundColor: '#7C5CFC',
+    opacity: 0.10,
   },
 });

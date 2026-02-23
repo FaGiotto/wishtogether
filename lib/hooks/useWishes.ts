@@ -3,6 +3,26 @@ import { supabase } from '../supabase';
 import { Wish } from '../../types';
 import { CategoryKey } from '../../constants/categories';
 
+const SELECT = '*, creator:users!created_by(id, display_name), comments!wish_id(count), wish_priorities!wish_id(value, user_id)';
+
+function sortByPriority(data: Wish[]): Wish[] {
+  return [...data].sort((a, b) => {
+    const pa = a.wish_priorities ?? [];
+    const pb = b.wish_priorities ?? [];
+    const bothA = pa.length >= 2;
+    const bothB = pb.length >= 2;
+    if (bothA && bothB) {
+      const avgA = pa.reduce((s, p) => s + p.value, 0) / pa.length;
+      const avgB = pb.reduce((s, p) => s + p.value, 0) / pb.length;
+      if (avgA !== avgB) return avgB - avgA;
+      return 0;
+    }
+    if (bothA) return -1;
+    if (bothB) return 1;
+    return 0;
+  });
+}
+
 export function useWishes(
   coupleId: string | null | undefined,
   category: CategoryKey | 'all',
@@ -24,7 +44,7 @@ export function useWishes(
 
     let query = supabase
       .from('wishes')
-      .select('*, creator:users!created_by(id, display_name)')
+      .select(SELECT)
       .eq('couple_id', coupleId)
       .eq('is_done', onlyDone)
       .order('created_at', { ascending: false });
@@ -33,12 +53,28 @@ export function useWishes(
       query = query.eq('category', category);
     }
 
-    const { data, error: err } = await query;
+    let { data, error: err } = await query;
+
+    // Fallback se wish_priorities non esiste ancora nel DB
+    if (err) {
+      let fallbackQuery = supabase
+        .from('wishes')
+        .select('*, creator:users!created_by(id, display_name), comments!wish_id(count)')
+        .eq('couple_id', coupleId)
+        .eq('is_done', onlyDone)
+        .order('created_at', { ascending: false });
+      if (category !== 'all') fallbackQuery = fallbackQuery.eq('category', category);
+      const { data: fallbackData, error: fallbackErr } = await fallbackQuery;
+      if (!fallbackErr) {
+        data = fallbackData;
+        err = null;
+      }
+    }
 
     if (err) {
       setError(err.message);
     } else {
-      setWishes((data as Wish[]) ?? []);
+      setWishes(sortByPriority((data as Wish[]) ?? []));
     }
     setLoading(false);
   }, [coupleId, category, onlyDone]);
@@ -63,12 +99,15 @@ export function useWishes(
         },
         async (payload) => {
           if (payload.eventType === 'INSERT') {
-            // Fetch il record completo con il join creator
-            const { data } = await supabase
-              .from('wishes')
-              .select('*, creator:users!created_by(id, display_name)')
-              .eq('id', payload.new.id)
-              .single();
+            let { data } = await supabase.from('wishes').select(SELECT).eq('id', payload.new.id).single();
+            if (!data) {
+              const { data: fb } = await supabase
+                .from('wishes')
+                .select('*, creator:users!created_by(id, display_name), comments!wish_id(count)')
+                .eq('id', payload.new.id)
+                .single();
+              data = fb;
+            }
 
             if (data) {
               const wish = data as Wish;
@@ -77,7 +116,7 @@ export function useWishes(
               if (matchesCategory && matchesDone) {
                 setWishes((prev) => {
                   if (prev.some((w) => w.id === wish.id)) return prev;
-                  return [wish, ...prev];
+                  return sortByPriority([wish, ...prev]);
                 });
               }
             }
@@ -88,12 +127,10 @@ export function useWishes(
 
             setWishes((prev) => {
               if (matchesCategory && matchesDone) {
-                // Aggiorna in-place preservando i campi joined
-                return prev.map((w) =>
-                  w.id === updated.id ? { ...w, ...updated } : w
+                return sortByPriority(
+                  prev.map((w) => (w.id === updated.id ? { ...w, ...updated } : w))
                 );
               } else {
-                // Non appartiene più a questa vista → rimuovi
                 return prev.filter((w) => w.id !== updated.id);
               }
             });
@@ -109,5 +146,9 @@ export function useWishes(
     };
   }, [coupleId, category, onlyDone]);
 
-  return { wishes, loading, error, refresh: fetch };
+  const removeWish = useCallback((id: string) => {
+    setWishes((prev) => prev.filter((w) => w.id !== id));
+  }, []);
+
+  return { wishes, loading, error, refresh: fetch, removeWish };
 }

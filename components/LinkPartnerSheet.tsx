@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   Modal, View, Text, TextInput, TouchableOpacity,
   StyleSheet, Alert, ActivityIndicator, KeyboardAvoidingView, Platform,
@@ -22,6 +22,8 @@ export default function LinkPartnerSheet({ visible, onClose }: Props) {
   const [myCode, setMyCode] = useState(user?.invite_code ?? '');
   const [inputCode, setInputCode] = useState('');
   const [loading, setLoading] = useState(false);
+  const inputRef = useRef<any>(null);
+  const [codeFocused, setCodeFocused] = useState(false);
 
   useEffect(() => {
     if (user?.invite_code) setMyCode(user.invite_code);
@@ -115,15 +117,36 @@ export default function LinkPartnerSheet({ visible, onClose }: Props) {
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Inserisci il codice del partner</Text>
+
+          <TouchableOpacity
+            style={styles.codeBoxesRow}
+            onPress={() => inputRef.current?.focus()}
+            activeOpacity={1}
+          >
+            {Array.from({ length: 6 }).map((_, i) => (
+              <View
+                key={i}
+                style={[
+                  styles.codeCharBox,
+                  codeFocused && inputCode.length === i && styles.codeCharBoxActive,
+                  !!inputCode[i] && styles.codeCharBoxFilled,
+                ]}
+              >
+                <Text style={styles.codeChar}>{inputCode[i] ?? ''}</Text>
+              </View>
+            ))}
+          </TouchableOpacity>
+
           <TextInput
-            style={styles.input}
-            placeholder="_ _ _ _ _ _"
-            placeholderTextColor={Colors.border}
+            ref={inputRef}
+            style={styles.hiddenInput}
             autoCapitalize="characters"
             autoCorrect={false}
             maxLength={6}
             value={inputCode}
             onChangeText={setInputCode}
+            onFocus={() => setCodeFocused(true)}
+            onBlur={() => setCodeFocused(false)}
           />
           <TouchableOpacity
             style={[styles.button, styles.buttonSecondary, (inputCode.length < 6 || loading) && styles.buttonDisabled]}
@@ -147,35 +170,64 @@ const styles = StyleSheet.create({
   },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: Spacing.md },
   title: { ...Typography.title, color: Colors.textPrimary },
-  section: { marginBottom: Spacing.lg },
-  sectionTitle: { ...Typography.subtitle, color: Colors.textPrimary, marginBottom: 4 },
-  sectionSubtitle: { ...Typography.caption, marginBottom: Spacing.sm },
+  section: { marginBottom: Spacing.xl },
+  sectionTitle: { ...Typography.subtitle, color: Colors.textPrimary, marginBottom: Spacing.sm },
+  sectionSubtitle: { ...Typography.caption, marginBottom: Spacing.md },
   codeRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
   codeBox: {
     flex: 1, backgroundColor: Colors.surface2,
-    borderRadius: Radii.card, paddingVertical: Spacing.md,
+    borderRadius: Radii.card, paddingVertical: Spacing.lg,
     alignItems: 'center', borderWidth: 2, borderColor: Colors.primary, borderStyle: 'dashed',
   },
-  codeText: { fontSize: 28, fontWeight: '700', color: Colors.primary, letterSpacing: 8 },
+  codeText: { fontSize: 32, fontWeight: '700', color: Colors.primary, letterSpacing: 4 },
   regenButton: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: Spacing.sm, paddingHorizontal: Spacing.xs },
   regenText: { ...Typography.caption, color: Colors.primary, fontWeight: '600' },
-  divider: { flexDirection: 'row', alignItems: 'center', marginBottom: Spacing.lg, gap: Spacing.sm },
+  divider: { flexDirection: 'row', alignItems: 'center', marginBottom: Spacing.xl, gap: Spacing.sm },
   dividerLine: { flex: 1, height: 1, backgroundColor: Colors.border },
   dividerText: { ...Typography.caption, color: Colors.textSecondary },
-  input: {
+  codeBoxesRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: Spacing.sm,
+    marginBottom: Spacing.xl,
+    gap: 8,
+  },
+  codeCharBox: {
+    flex: 1,
+    aspectRatio: 1,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: Colors.border,
     backgroundColor: Colors.background,
-    borderWidth: 1.5, borderColor: Colors.border,
-    borderRadius: Radii.button,
-    paddingHorizontal: Spacing.md, paddingVertical: 14,
-    marginBottom: Spacing.sm,
-    ...Typography.subtitle,
-    color: Colors.textPrimary, letterSpacing: 8, textAlign: 'center',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  codeCharBoxActive: {
+    borderColor: Colors.primary,
+    borderWidth: 2,
+    backgroundColor: Colors.primary + '08',
+  },
+  codeCharBoxFilled: {
+    borderColor: Colors.primary,
+    backgroundColor: Colors.primary + '10',
+  },
+  codeChar: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: Colors.textPrimary,
+    letterSpacing: 0,
+  },
+  hiddenInput: {
+    position: 'absolute',
+    width: 1,
+    height: 1,
+    opacity: 0,
   },
   button: {
     backgroundColor: Colors.primary, borderRadius: Radii.button,
     paddingVertical: 17, alignItems: 'center',
   },
-  buttonSecondary: { backgroundColor: Colors.secondary },
+  buttonSecondary: { backgroundColor: '#16151F' },
   buttonDisabled: { opacity: 0.4 },
   buttonText: { ...Typography.subtitle, color: '#fff' },
 });

@@ -11,6 +11,7 @@ import { useUser } from '../../lib/context/UserContext';
 import { CATEGORIES, CategoryKey } from '../../constants/categories';
 import { Colors, Typography, Spacing, Radii } from '../../constants/theme';
 import { sendPush } from '../../lib/hooks/usePushNotifications';
+import PriorityHearts from '../../components/PriorityHearts';
 
 export default function AddWishModal() {
   const router = useRouter();
@@ -19,6 +20,7 @@ export default function AddWishModal() {
   const [notes, setNotes] = useState('');
   const [category, setCategory] = useState<CategoryKey | null>(null);
   const [imageUri, setImageUri] = useState<string | null>(null);
+  const [priority, setPriority] = useState(0);
   const [saving, setSaving] = useState(false);
 
   async function pickImage() {
@@ -51,6 +53,7 @@ export default function AddWishModal() {
   async function handleSave() {
     if (!title.trim()) { Alert.alert('Titolo obbligatorio', 'Inserisci un titolo per il desiderio.'); return; }
     if (!category) { Alert.alert('Categoria obbligatoria', 'Seleziona una categoria.'); return; }
+    if (priority === 0) { Alert.alert('Priorità obbligatoria', 'Indica quanta importanza dai a questo desiderio.'); return; }
     if (!user?.couple_id) { Alert.alert('Partner non collegato', 'Devi prima collegare il tuo partner.'); return; }
     setSaving(true);
 
@@ -64,6 +67,14 @@ export default function AddWishModal() {
     if (imageUri) {
       const imageUrl = await uploadImage(imageUri, inserted.id);
       if (imageUrl) await supabase.from('wishes').update({ image_url: imageUrl }).eq('id', inserted.id);
+    }
+
+    if (priority > 0) {
+      await supabase.from('wish_priorities').insert({
+        wish_id: inserted.id,
+        user_id: user.id,
+        value: priority,
+      });
     }
 
     // Send push notification to partner
@@ -104,12 +115,12 @@ export default function AddWishModal() {
             return (
               <TouchableOpacity
                 key={cat.key}
-                style={[styles.categoryPill, active && { backgroundColor: cat.color + '18', borderColor: cat.color }]}
+                style={[styles.categoryPill, active && { backgroundColor: Colors.primary + '18', borderColor: Colors.primary }]}
                 onPress={() => setCategory(cat.key)}
                 activeOpacity={0.8}
               >
-                <Ionicons name={cat.icon as any} size={15} color={active ? cat.color : Colors.textSecondary} style={{ marginRight: 6 }} />
-                <Text style={[styles.categoryPillText, active && { color: cat.color, fontWeight: '700' }]}>{cat.label}</Text>
+                <Ionicons name={cat.icon as any} size={15} color={active ? Colors.primary : Colors.textSecondary} style={{ marginRight: 6 }} />
+                <Text style={[styles.categoryPillText, active && { color: Colors.primary, fontWeight: '700' }]}>{cat.label}</Text>
               </TouchableOpacity>
             );
           })}
@@ -127,6 +138,17 @@ export default function AddWishModal() {
           placeholderTextColor={Colors.textSecondary} value={notes} onChangeText={setNotes}
           multiline numberOfLines={3}
         />
+
+        <Text style={styles.label}>La tua priorità *</Text>
+        <View style={styles.priorityContainer}>
+          <PriorityHearts value={priority} interactive outlined onSelect={setPriority} size={34} />
+          {priority > 0 && (
+            <View style={styles.priorityWarning}>
+              <Ionicons name="information-circle-outline" size={14} color={Colors.textSecondary} />
+              <Text style={styles.priorityWarningText}>Il voto non è modificabile una volta salvato</Text>
+            </View>
+          )}
+        </View>
 
         <Text style={styles.label}>Immagine</Text>
         {imageUri ? (
@@ -157,7 +179,7 @@ const styles = StyleSheet.create({
   scroll: { paddingHorizontal: Spacing.md, paddingBottom: 48 },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: Spacing.lg, paddingTop: Spacing.sm },
   headerTitle: { ...Typography.title, color: Colors.textPrimary },
-  label: { fontSize: 11, fontWeight: '700', color: Colors.textSecondary, textTransform: 'uppercase', letterSpacing: 1, marginBottom: Spacing.xs, marginTop: Spacing.md },
+  label: { fontSize: 11, fontWeight: '700', color: Colors.textSecondary, textTransform: 'uppercase', letterSpacing: 0, marginBottom: Spacing.xs, marginTop: Spacing.md },
   categoryGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.xs },
   categoryPill: {
     flexDirection: 'row', alignItems: 'center',
@@ -179,6 +201,20 @@ const styles = StyleSheet.create({
   imagePreviewContainer: { position: 'relative' },
   imagePreview: { width: '100%', aspectRatio: 16 / 9, borderRadius: Radii.card },
   removeImage: { position: 'absolute', top: 8, right: 8 },
+  priorityContainer: {
+    paddingVertical: Spacing.xs,
+    gap: Spacing.sm,
+  },
+  priorityWarning: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
+  priorityWarningText: {
+    fontSize: 12,
+    color: Colors.textSecondary,
+    flex: 1,
+  },
   saveButton: {
     backgroundColor: Colors.primary, borderRadius: Radii.button,
     paddingVertical: 17, alignItems: 'center', marginTop: Spacing.xl,

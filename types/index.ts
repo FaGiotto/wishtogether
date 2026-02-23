@@ -26,6 +26,8 @@ export interface Wish {
   created_at: string;
   // joined
   creator?: Pick<User, 'id' | 'display_name' | 'avatar_url'>;
+  comments?: [{ count: number }];
+  wish_priorities?: Array<{ value: number; user_id: string }>;
 }
 
 export interface Comment {

@@ -11,7 +11,10 @@ import { useEffect, useState, useRef } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useUser } from '../../lib/context/UserContext';
 import { useComments } from '../../lib/hooks/useComments';
+import { usePriority } from '../../lib/hooks/usePriority';
 import CommentBubble from '../../components/CommentBubble';
+import PriorityHearts from '../../components/PriorityHearts';
+import PrioritySheet from '../../components/PrioritySheet';
 import { Wish } from '../../types';
 import { CATEGORIES } from '../../constants/categories';
 import { Colors, Typography, Spacing, Radii } from '../../constants/theme';
@@ -26,6 +29,8 @@ export default function WishDetailScreen() {
   const [commentText, setCommentText] = useState('');
   const [sending, setSending] = useState(false);
   const { comments, loading: loadingComments, addComment } = useComments(id);
+  const { priorities, setPriority, average } = usePriority(id);
+  const [prioritySheetVisible, setPrioritySheetVisible] = useState(false);
   const scrollRef = useRef<ScrollView>(null);
   const checkScale = useRef(new Animated.Value(0)).current;
 
@@ -120,6 +125,11 @@ export default function WishDetailScreen() {
     ]);
   }
 
+  async function handleVoteConfirm(value: number) {
+    if (!user) return;
+    await setPriority(user.id, value);
+  }
+
   async function handleSendComment() {
     if (!commentText.trim() || !user) return;
     setSending(true);
@@ -168,10 +178,10 @@ export default function WishDetailScreen() {
           styles.categoryPill,
           hasImage
             ? { backgroundColor: 'rgba(0,0,0,0.35)' }
-            : { backgroundColor: category.color + '18' },
+            : { backgroundColor: Colors.primary + '18' },
         ]}>
-          <Ionicons name={category.icon as any} size={13} color={hasImage ? '#fff' : category.color} style={{ marginRight: 4 }} />
-          <Text style={[styles.categoryLabel, { color: hasImage ? '#fff' : category.color }]}>{category.label}</Text>
+          <Ionicons name={category.icon as any} size={13} color={hasImage ? '#fff' : Colors.primary} style={{ marginRight: 4 }} />
+          <Text style={[styles.categoryLabel, { color: hasImage ? '#fff' : Colors.primary }]}>{category.label}</Text>
         </View>
       ) : <View style={{ flex: 1 }} />}
 
@@ -241,6 +251,54 @@ export default function WishDetailScreen() {
               <Text style={styles.sourceUrl} numberOfLines={1}>{wish.source_url}</Text>
             ) : null}
           </View>
+
+          {/* Priority */}
+          {(() => {
+            const myEntry = priorities.find((p) => p.user_id === user?.id);
+            const partnerEntry = priorities.find((p) => p.user_id !== user?.id);
+            if (!myEntry && !partnerEntry) return null;
+            const avgLabel = average !== null
+              ? (Number.isInteger(average) ? String(average) : average.toFixed(1))
+              : null;
+            return (
+              <>
+                <View style={styles.priorityCard}>
+                  <TouchableOpacity
+                    style={styles.priorityRow}
+                    onPress={() => setPrioritySheetVisible(true)}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={styles.priorityLabel}>Priorità</Text>
+                    <View style={styles.priorityRowRight}>
+                      {avgLabel !== null ? (
+                        <>
+                          <PriorityHearts value={Math.round(average!)} size={18} filledColor={Colors.heartsDark} emptyColor="#D1D5DB" />
+                          <Text style={styles.priorityAvgValue}>{avgLabel}</Text>
+                        </>
+                      ) : myEntry && !partnerEntry ? (
+                        <>
+                          <PriorityHearts value={myEntry.value} size={18} filledColor={Colors.heartsDark} emptyColor="#D1D5DB" />
+                          <Text style={styles.priorityPending}>in attesa</Text>
+                        </>
+                      ) : (
+                        <Text style={styles.priorityVotePrompt}>Dai la tua priorità</Text>
+                      )}
+                      <Ionicons name="chevron-forward" size={16} color={Colors.textSecondary} style={{ marginLeft: 4 }} />
+                    </View>
+                  </TouchableOpacity>
+                </View>
+
+                <PrioritySheet
+                  visible={prioritySheetVisible}
+                  onClose={() => setPrioritySheetVisible(false)}
+                  myEntry={myEntry}
+                  partnerEntry={partnerEntry}
+                  average={average}
+                  onVoteConfirm={handleVoteConfirm}
+                />
+              </>
+            );
+          })()}
 
           {/* Comments */}
           <View style={styles.commentsSection}>
@@ -332,6 +390,31 @@ const styles = StyleSheet.create({
   description: { ...Typography.body, color: Colors.textSecondary, lineHeight: 22, marginBottom: Spacing.sm },
   meta: { fontSize: 12, color: Colors.textSecondary, marginTop: Spacing.xs },
   sourceUrl: { fontSize: 12, color: Colors.primary, marginTop: 4 },
+  priorityCard: {
+    marginHorizontal: Spacing.md,
+    marginTop: Spacing.md,
+    backgroundColor: Colors.surface,
+    borderRadius: Radii.card,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    shadowColor: '#2A1D9E',
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 4,
+  },
+  priorityRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 14,
+    paddingHorizontal: Spacing.md,
+  },
+  priorityLabel: { fontSize: 15, fontWeight: '600', color: Colors.textPrimary },
+  priorityRowRight: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  priorityAvgValue: { fontSize: 15, fontWeight: '800', color: Colors.heartsDark },
+  priorityPending: { fontSize: 13, color: Colors.textSecondary },
+  priorityVotePrompt: { fontSize: 14, fontWeight: '600', color: Colors.primary },
   commentsSection: {
     marginTop: Spacing.sm,
     borderTopWidth: 1, borderTopColor: Colors.border,
@@ -339,9 +422,10 @@ const styles = StyleSheet.create({
   },
   commentsTitle: {
     fontSize: 13, fontWeight: '700', color: Colors.textSecondary,
-    textTransform: 'uppercase', letterSpacing: 0.8,
+    textTransform: 'uppercase', letterSpacing: 0,
     paddingHorizontal: Spacing.md, marginBottom: Spacing.sm,
   },
+  // (alias for priority section — keeps commentsTitle for comments header)
   emptyComments: {
     ...Typography.body,
     color: Colors.textSecondary,

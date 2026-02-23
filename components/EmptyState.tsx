@@ -23,15 +23,13 @@ export default function EmptyState({ category, isDone }: Props) {
   const subtitle = category
     ? `Aggiungi il primo "${category.label}" con il + in basso.`
     : messages.subtitle;
-  const iconColor = category?.color ?? Colors.primary;
-
   return (
     <View style={styles.container}>
-      <View style={[styles.iconWrap, { backgroundColor: iconColor + '15' }]}>
+      <View style={styles.iconWrap}>
         <Ionicons
           name={(category?.icon as any) ?? 'heart-outline'}
           size={44}
-          color={iconColor}
+          color={Colors.primary}
         />
       </View>
       <Text style={styles.title}>{messages.title}</Text>

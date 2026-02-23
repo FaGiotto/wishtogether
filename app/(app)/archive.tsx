@@ -1,5 +1,6 @@
 import { View, Text, FlatList, StyleSheet, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { supabase } from '../../lib/supabase';
 import { useCallback } from 'react';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useUser } from '../../lib/context/UserContext';
@@ -11,7 +12,7 @@ import { Colors, Typography, Spacing } from '../../constants/theme';
 export default function ArchiveScreen() {
   const router = useRouter();
   const { user } = useUser();
-  const { wishes, loading, refresh } = useWishes(user?.couple_id, 'all', true);
+  const { wishes, loading, refresh, removeWish } = useWishes(user?.couple_id, 'all', true);
 
   useFocusEffect(
     useCallback(() => {
@@ -35,7 +36,18 @@ export default function ArchiveScreen() {
           data={wishes}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
-            <WishCard wish={item} onPress={() => router.push(`/wish/${item.id}`)} />
+            <WishCard
+              wish={item}
+              onPress={() => router.push(`/wish/${item.id}`)}
+              onMarkUndone={async () => {
+                removeWish(item.id);
+                await supabase.from('wishes').update({ is_done: false, done_at: null }).eq('id', item.id);
+              }}
+              onDelete={async () => {
+                removeWish(item.id);
+                await supabase.from('wishes').delete().eq('id', item.id);
+              }}
+            />
           )}
           contentContainerStyle={[
             styles.listContent,

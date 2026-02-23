@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import {
-  View, Text, TextInput, TouchableOpacity,
+  View, Text, TouchableOpacity,
   StyleSheet, KeyboardAvoidingView, Platform, Alert, ActivityIndicator,
 } from 'react-native';
 import { Link } from 'expo-router';
@@ -8,6 +8,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../../lib/supabase';
 import { Colors, Typography, Spacing, Radii } from '../../constants/theme';
 import GradientBackground from '../../components/GradientBackground';
+import FloatingLabelInput from '../../components/FloatingLabelInput';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
@@ -35,7 +36,7 @@ export default function LoginScreen() {
           {/* Logo */}
           <View style={styles.logoWrap}>
             <View style={styles.logoCircle}>
-              <Ionicons name="heart" size={30} color={Colors.secondary} />
+              <Ionicons name="heart" size={30} color={Colors.primary} />
             </View>
             <Text style={styles.appName}>WishTogether</Text>
             <Text style={styles.tagline}>i vostri desideri, in un posto solo</Text>
@@ -43,22 +44,18 @@ export default function LoginScreen() {
 
           {/* Form */}
           <View style={styles.form}>
-            <TextInput
-              style={styles.input}
-              placeholder="Email"
-              placeholderTextColor={Colors.textSecondary}
-              autoCapitalize="none"
-              keyboardType="email-address"
+            <FloatingLabelInput
+              label="Email"
               value={email}
               onChangeText={setEmail}
+              autoCapitalize="none"
+              keyboardType="email-address"
             />
-            <TextInput
-              style={styles.input}
-              placeholder="Password"
-              placeholderTextColor={Colors.textSecondary}
-              secureTextEntry
+            <FloatingLabelInput
+              label="Password"
               value={password}
               onChangeText={setPassword}
+              secureTextEntry
             />
 
             <TouchableOpacity style={styles.button} onPress={handleLogin} disabled={loading} activeOpacity={0.85}>
@@ -94,8 +91,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: Spacing.md,
-    shadowColor: Colors.secondary,
-    shadowOpacity: 0.2,
+    shadowColor: Colors.primary,
+    shadowOpacity: 0.25,
     shadowRadius: 16,
     shadowOffset: { width: 0, height: 4 },
     elevation: 4,
@@ -108,18 +105,6 @@ const styles = StyleSheet.create({
   },
   tagline: { ...Typography.body, color: Colors.textSecondary },
   form: { marginBottom: Spacing.lg },
-  input: {
-    backgroundColor: Colors.surface,
-    borderWidth: 1.5,
-    borderColor: Colors.border,
-    borderRadius: Radii.button,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: 15,
-    marginBottom: Spacing.sm,
-    fontSize: 15,
-    fontWeight: '400',
-    color: Colors.textPrimary,
-  },
   button: {
     backgroundColor: Colors.primary,
     borderRadius: Radii.button,

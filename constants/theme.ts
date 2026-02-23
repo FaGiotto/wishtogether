@@ -6,6 +6,8 @@ export const Colors = {
   surface2: '#F3F0FF',
   textPrimary: '#1A1A2E',
   textSecondary: '#8892A4',
+  hearts: '#29E583',
+  heartsDark: '#17A058',
   success: '#10B981',
   error: '#EF4444',
   border: '#EDE8FF',

@@ -233,7 +233,7 @@ const styles = StyleSheet.create({
     borderStyle: 'dashed',
     marginBottom: Spacing.sm,
   },
-  codeText: { fontSize: 32, fontWeight: '700', color: Colors.primary, letterSpacing: 8 },
+  codeText: { fontSize: 32, fontWeight: '700', color: Colors.primary, letterSpacing: 0 },
   row: { flexDirection: 'row' },
   input: {
     backgroundColor: Colors.surface,
@@ -245,7 +245,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.sm,
     ...Typography.body,
     color: Colors.textPrimary,
-    letterSpacing: 4,
+    letterSpacing: 0,
     textAlign: 'center',
   },
   button: {
