@@ -54,8 +54,8 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.lg,
   },
   title: {
-    fontSize: 19,
-    fontWeight: '700',
+    fontSize: 28,
+    fontFamily: 'DMSerifDisplay_400Regular',
     color: Colors.textPrimary,
     textAlign: 'center',
     marginBottom: Spacing.sm,

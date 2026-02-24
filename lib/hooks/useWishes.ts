@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { supabase } from '../supabase';
 import { Wish } from '../../types';
 import { CategoryKey } from '../../constants/categories';
@@ -31,6 +31,7 @@ export function useWishes(
   const [wishes, setWishes] = useState<Wish[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const pendingDeletes = useRef<Set<string>>(new Set());
 
   const fetch = useCallback(async () => {
     if (!coupleId) {
@@ -74,7 +75,8 @@ export function useWishes(
     if (err) {
       setError(err.message);
     } else {
-      setWishes(sortByPriority((data as Wish[]) ?? []));
+      const filtered = ((data as Wish[]) ?? []).filter((w) => !pendingDeletes.current.has(w.id));
+      setWishes(sortByPriority(filtered));
     }
     setLoading(false);
   }, [coupleId, category, onlyDone]);
@@ -135,6 +137,7 @@ export function useWishes(
               }
             });
           } else if (payload.eventType === 'DELETE') {
+            pendingDeletes.current.delete(payload.old.id);
             setWishes((prev) => prev.filter((w) => w.id !== payload.old.id));
           }
         },
@@ -147,6 +150,7 @@ export function useWishes(
   }, [coupleId, category, onlyDone]);
 
   const removeWish = useCallback((id: string) => {
+    pendingDeletes.current.add(id);
     setWishes((prev) => prev.filter((w) => w.id !== id));
   }, []);
 

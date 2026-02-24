@@ -1,9 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, ScrollView,
   StyleSheet, Alert, Image, KeyboardAvoidingView, Platform, ActivityIndicator,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { supabase } from '../../lib/supabase';
@@ -16,12 +16,31 @@ import PriorityHearts from '../../components/PriorityHearts';
 export default function AddWishModal() {
   const router = useRouter();
   const { user } = useUser();
+  const { category: initialCategory, wishId } = useLocalSearchParams<{ category?: CategoryKey; wishId?: string }>();
+  const isEdit = !!wishId;
   const [title, setTitle] = useState('');
   const [notes, setNotes] = useState('');
-  const [category, setCategory] = useState<CategoryKey | null>(null);
+  const [category, setCategory] = useState<CategoryKey | null>(initialCategory ?? null);
   const [imageUri, setImageUri] = useState<string | null>(null);
+  const [existingImageUrl, setExistingImageUrl] = useState<string | null>(null);
   const [priority, setPriority] = useState(0);
   const [saving, setSaving] = useState(false);
+  const [loadingExisting, setLoadingExisting] = useState(isEdit);
+
+  useEffect(() => {
+    if (!isEdit || !wishId) return;
+    async function loadExisting() {
+      const { data } = await supabase.from('wishes').select('*').eq('id', wishId).single();
+      if (data) {
+        setTitle(data.title ?? '');
+        setNotes(data.description ?? '');
+        setCategory(data.category ?? null);
+        setExistingImageUrl(data.image_url ?? null);
+      }
+      setLoadingExisting(false);
+    }
+    loadExisting();
+  }, [wishId]);
 
   async function pickImage() {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -53,10 +72,32 @@ export default function AddWishModal() {
   async function handleSave() {
     if (!title.trim()) { Alert.alert('Titolo obbligatorio', 'Inserisci un titolo per il desiderio.'); return; }
     if (!category) { Alert.alert('Categoria obbligatoria', 'Seleziona una categoria.'); return; }
-    if (priority === 0) { Alert.alert('Priorità obbligatoria', 'Indica quanta importanza dai a questo desiderio.'); return; }
+    if (!isEdit && priority === 0) { Alert.alert('Priorità obbligatoria', 'Indica quanta importanza dai a questo desiderio.'); return; }
     if (!user?.couple_id) { Alert.alert('Partner non collegato', 'Devi prima collegare il tuo partner.'); return; }
     setSaving(true);
 
+    if (isEdit && wishId) {
+      // ── Edit mode ──
+      const { error } = await supabase.from('wishes').update({
+        category, title: title.trim(), description: notes.trim() || null,
+      }).eq('id', wishId);
+      if (error) { Alert.alert('Errore', error.message); setSaving(false); return; }
+
+      if (imageUri) {
+        // New image picked — upload and save
+        const imageUrl = await uploadImage(imageUri, wishId);
+        if (imageUrl) await supabase.from('wishes').update({ image_url: imageUrl }).eq('id', wishId);
+      } else if (!existingImageUrl) {
+        // Image was removed
+        await supabase.from('wishes').update({ image_url: null }).eq('id', wishId);
+      }
+
+      setSaving(false);
+      router.back();
+      return;
+    }
+
+    // ── Insert mode ──
     const { data: inserted, error } = await supabase.from('wishes').insert({
       couple_id: user.couple_id, category, title: title.trim(),
       description: notes.trim() || null, created_by: user.id,
@@ -97,12 +138,25 @@ export default function AddWishModal() {
     router.back();
   }
 
+  if (loadingExisting) {
+    return (
+      <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <View style={styles.handleBar} />
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <ActivityIndicator color={Colors.primary} size="large" />
+        </View>
+      </KeyboardAvoidingView>
+    );
+  }
+
+  const displayImageUri = imageUri ?? existingImageUrl;
+
   return (
     <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <View style={styles.handleBar} />
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Nuovo desiderio</Text>
+          <Text style={styles.headerTitle}>{isEdit ? 'Modifica desiderio' : 'Nuovo desiderio'}</Text>
           <TouchableOpacity onPress={() => router.back()} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
             <Ionicons name="close" size={24} color={Colors.textSecondary} />
           </TouchableOpacity>
@@ -139,22 +193,26 @@ export default function AddWishModal() {
           multiline numberOfLines={3}
         />
 
-        <Text style={styles.label}>La tua priorità *</Text>
-        <View style={styles.priorityContainer}>
-          <PriorityHearts value={priority} interactive outlined onSelect={setPriority} size={34} />
-          {priority > 0 && (
-            <View style={styles.priorityWarning}>
-              <Ionicons name="information-circle-outline" size={14} color={Colors.textSecondary} />
-              <Text style={styles.priorityWarningText}>Il voto non è modificabile una volta salvato</Text>
+        {!isEdit && (
+          <>
+            <Text style={styles.label}>La tua priorità *</Text>
+            <View style={styles.priorityContainer}>
+              <PriorityHearts value={priority} interactive outlined onSelect={setPriority} size={34} />
+              {priority > 0 && (
+                <View style={styles.priorityWarning}>
+                  <Ionicons name="information-circle-outline" size={14} color={Colors.textSecondary} />
+                  <Text style={styles.priorityWarningText}>Il voto non è modificabile una volta salvato</Text>
+                </View>
+              )}
             </View>
-          )}
-        </View>
+          </>
+        )}
 
         <Text style={styles.label}>Immagine</Text>
-        {imageUri ? (
+        {displayImageUri ? (
           <View style={styles.imagePreviewContainer}>
-            <Image source={{ uri: imageUri }} style={styles.imagePreview} resizeMode="cover" />
-            <TouchableOpacity style={styles.removeImage} onPress={() => setImageUri(null)}>
+            <Image source={{ uri: displayImageUri }} style={styles.imagePreview} resizeMode="cover" />
+            <TouchableOpacity style={styles.removeImage} onPress={() => { setImageUri(null); setExistingImageUrl(null); }}>
               <Ionicons name="close-circle" size={28} color={Colors.error} />
             </TouchableOpacity>
           </View>
@@ -166,7 +224,7 @@ export default function AddWishModal() {
         )}
 
         <TouchableOpacity style={[styles.saveButton, saving && styles.saveButtonDisabled]} onPress={handleSave} disabled={saving} activeOpacity={0.85}>
-          {saving ? <ActivityIndicator color="#fff" /> : <Text style={styles.saveButtonText}>Salva desiderio</Text>}
+          {saving ? <ActivityIndicator color="#fff" /> : <Text style={styles.saveButtonText}>{isEdit ? 'Salva modifiche' : 'Salva desiderio'}</Text>}
         </TouchableOpacity>
       </ScrollView>
     </KeyboardAvoidingView>

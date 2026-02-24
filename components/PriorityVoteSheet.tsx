@@ -88,7 +88,7 @@ export default function PriorityVoteSheet({ visible, wishTitle, onClose, onConfi
 const styles = StyleSheet.create({
   backdrop: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.4)',
+    backgroundColor: Colors.overlayDark,
   },
   sheet: {
     position: 'absolute',
@@ -110,7 +110,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.md,
   },
   heading: {
-    fontSize: 20, fontWeight: '700', color: Colors.textPrimary,
+    fontSize: 20, fontFamily: 'DMSerifDisplay_400Regular', color: Colors.textPrimary,
     marginBottom: 4,
   },
   subtitle: {

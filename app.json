@@ -13,7 +13,7 @@
       "resizeMode": "contain",
       "backgroundColor": "#7C5CFC"
     },
-   "ios": {
+    "ios": {
       "supportsTablet": true,
       "newArchEnabled": false,
       "bundleIdentifier": "com.wishtogether.app"
@@ -45,7 +45,8 @@
         {
           "photosPermission": "WishTogether usa la galleria per aggiungere immagini ai desideri."
         }
-      ]
+      ],
+      "expo-font"
     ],
     "experiments": {
       "typedRoutes": true

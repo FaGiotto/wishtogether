@@ -7,11 +7,11 @@ export default function AppLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: Colors.primary,
-        tabBarInactiveTintColor: Colors.textSecondary,
+        tabBarActiveTintColor: '#fff',
+        tabBarInactiveTintColor: Colors.glassTextSub,
         tabBarStyle: {
-          backgroundColor: Colors.surface,
-          borderTopColor: Colors.border,
+          backgroundColor: Colors.cardDark,
+          borderTopColor: Colors.glassBorder,
           borderTopWidth: 1,
           paddingBottom: 24,
           paddingTop: 10,

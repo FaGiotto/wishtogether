@@ -10,11 +10,13 @@ interface Props {
   autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
   keyboardType?: any;
   autoCorrect?: boolean;
+  dark?: boolean;
 }
 
 export default function FloatingLabelInput({
   label, value, onChangeText,
   secureTextEntry, autoCapitalize = 'none', keyboardType, autoCorrect = false,
+  dark = false,
 }: Props) {
   const [focused, setFocused] = useState(false);
   const anim = useRef(new Animated.Value(value ? 1 : 0)).current;
@@ -41,20 +43,25 @@ export default function FloatingLabelInput({
   const labelTop = anim.interpolate({ inputRange: [0, 1], outputRange: [19, 7] });
   const labelSize = anim.interpolate({ inputRange: [0, 1], outputRange: [15, 11] });
 
+  const containerStyle = dark
+    ? { backgroundColor: Colors.glassBorder, borderColor: focused ? Colors.blobPrimary : Colors.glassBorderAlt }
+    : { backgroundColor: Colors.surface, borderColor: focused ? Colors.primary : Colors.border };
+
+  const labelColor = dark
+    ? (active ? Colors.blobPrimary : Colors.glassTextSub)
+    : (active ? Colors.primary : Colors.textSecondary);
+
   return (
     <TouchableWithoutFeedback onPress={() => inputRef.current?.focus()}>
-      <View style={[styles.container, focused && styles.containerFocused]}>
+      <View style={[styles.container, containerStyle]}>
         <Animated.Text
-          style={[
-            styles.label,
-            { top: labelTop, fontSize: labelSize, color: active ? Colors.primary : Colors.textSecondary },
-          ]}
+          style={[styles.label, { top: labelTop, fontSize: labelSize, color: labelColor }]}
         >
           {label}
         </Animated.Text>
         <TextInput
           ref={inputRef}
-          style={styles.input}
+          style={[styles.input, dark && styles.inputDark]}
           value={value}
           onChangeText={onChangeText}
           onFocus={handleFocus}
@@ -72,15 +79,10 @@ export default function FloatingLabelInput({
 const styles = StyleSheet.create({
   container: {
     height: 58,
-    backgroundColor: Colors.surface,
     borderWidth: 1.5,
-    borderColor: Colors.border,
     borderRadius: Radii.button,
     paddingHorizontal: Spacing.md,
     marginBottom: Spacing.sm,
-  },
-  containerFocused: {
-    borderColor: Colors.primary,
   },
   label: {
     position: 'absolute',
@@ -93,5 +95,8 @@ const styles = StyleSheet.create({
     paddingTop: 22,
     paddingBottom: 6,
     color: Colors.textPrimary,
+  },
+  inputDark: {
+    color: '#fff',
   },
 });

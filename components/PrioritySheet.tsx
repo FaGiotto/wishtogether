@@ -73,7 +73,7 @@ export default function PrioritySheet({ visible, onClose, myEntry, partnerEntry,
           <View style={styles.voteRight}>
             {myEntry ? (
               <>
-                <PriorityHearts value={myEntry.value} size={22} filledColor={Colors.heartsDark} emptyColor="#D1D5DB" />
+                <PriorityHearts value={myEntry.value} size={22} filledColor={Colors.heartsDark} emptyColor={Colors.inputEmpty} />
                 <Text style={styles.voteValue}>{myEntry.value}</Text>
               </>
             ) : (
@@ -83,7 +83,7 @@ export default function PrioritySheet({ visible, onClose, myEntry, partnerEntry,
                 onSelect={setTempValue}
                 size={26}
                 filledColor={Colors.heartsDark}
-                emptyColor="#D1D5DB"
+                emptyColor={Colors.inputEmpty}
               />
             )}
           </View>
@@ -95,7 +95,7 @@ export default function PrioritySheet({ visible, onClose, myEntry, partnerEntry,
           <View style={styles.voteRight}>
             {partnerEntry ? (
               <>
-                <PriorityHearts value={partnerEntry.value} size={22} filledColor={Colors.heartsDark} emptyColor="#D1D5DB" />
+                <PriorityHearts value={partnerEntry.value} size={22} filledColor={Colors.heartsDark} emptyColor={Colors.inputEmpty} />
                 <Text style={styles.voteValue}>{partnerEntry.value}</Text>
               </>
             ) : (
@@ -111,7 +111,7 @@ export default function PrioritySheet({ visible, onClose, myEntry, partnerEntry,
             <View style={styles.row}>
               <Text style={styles.avgLabel}>Media</Text>
               <View style={styles.avgRight}>
-                <PriorityHearts value={Math.round(average!)} size={22} filledColor={Colors.heartsDark} emptyColor="#D1D5DB" />
+                <PriorityHearts value={Math.round(average!)} size={22} filledColor={Colors.heartsDark} emptyColor={Colors.inputEmpty} />
                 <Text style={styles.avgValue}>{avgLabel}</Text>
               </View>
             </View>
@@ -148,7 +148,7 @@ export default function PrioritySheet({ visible, onClose, myEntry, partnerEntry,
 const styles = StyleSheet.create({
   backdrop: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.4)',
+    backgroundColor: Colors.overlayDark,
   },
   sheet: {
     position: 'absolute',

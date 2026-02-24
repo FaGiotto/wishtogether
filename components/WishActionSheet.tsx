@@ -82,7 +82,7 @@ export default function WishActionSheet({ wish, onClose, onRefresh }: Props) {
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: 'rgba(26,26,46,0.4)',
+    backgroundColor: Colors.overlayActionSheet,
   },
   sheet: {
     backgroundColor: Colors.surface,

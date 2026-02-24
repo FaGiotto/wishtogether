@@ -19,7 +19,7 @@ export default function PriorityHearts({ value, interactive = false, onSelect, s
         const filled = i <= value;
         const iconName: any = outlined ? (filled ? 'heart' : 'heart-outline') : 'heart';
         const resolvedFilled = filledColor ?? (outlined ? Colors.heartsDark : Colors.hearts);
-        const resolvedEmpty = emptyColor ?? (outlined ? '#D1D5DB' : Colors.hearts + '70');
+        const resolvedEmpty = emptyColor ?? (outlined ? Colors.inputEmpty : Colors.hearts + '70');
         const color = filled ? resolvedFilled : resolvedEmpty;
         return (
           <TouchableOpacity

@@ -26,7 +26,7 @@ create table if not exists public.users (
 create table if not exists public.wishes (
   id          uuid primary key default gen_random_uuid(),
   couple_id   text not null,
-  category    text not null check (category in ('places','restaurants','movies','games','events')),
+  category    text not null check (category in ('places','restaurants','movies','games','events','experiences')),
   title       text not null,
   description text,
   image_url   text,

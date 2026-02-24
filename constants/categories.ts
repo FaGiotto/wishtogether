@@ -1,4 +1,4 @@
-export type CategoryKey = 'places' | 'restaurants' | 'movies' | 'games' | 'events';
+export type CategoryKey = 'places' | 'restaurants' | 'movies' | 'games' | 'events' | 'experiences';
 
 export interface Category {
   key: CategoryKey;
@@ -13,6 +13,7 @@ export const CATEGORIES: Category[] = [
   { key: 'movies', label: 'Film/Serie', icon: 'film-outline', color: '#EF4444' },
   { key: 'games', label: 'Videogiochi', icon: 'game-controller-outline', color: '#10B981' },
   { key: 'events', label: 'Eventi', icon: 'calendar-outline', color: '#3B82F6' },
+  { key: 'experiences', label: 'Esperienze', icon: 'sparkles-outline', color: '#8B5CF6' },
 ];
 
 export const ALL_CATEGORIES_KEY = 'all';

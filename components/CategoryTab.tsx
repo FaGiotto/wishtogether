@@ -66,16 +66,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Colors.surface,
+    backgroundColor: Colors.primary + '18',
     borderRadius: Radii.full,
-    borderWidth: 1.5,
-    borderColor: Colors.border,
     height: 36,
     paddingHorizontal: 16,
-    shadowColor: '#000',
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
   },
   chipActiveAll: {
     backgroundColor: Colors.primary,
@@ -84,7 +78,7 @@ const styles = StyleSheet.create({
   chipIcon: { marginRight: 5 },
   chipText: {
     fontSize: 14,
-    color: Colors.textSecondary,
+    color: Colors.primary,
     fontWeight: '500',
   },
   chipTextActive: {

@@ -130,8 +130,8 @@ export default function WishCard({ wish, onPress, onMarkDone, onMarkUndone, onDe
 
   // Colori adattativi: bianchi sopra immagine, normali senza
   const titleColor  = hasImage ? '#fff' : Colors.textPrimary;
-  const metaColor   = hasImage ? 'rgba(255,255,255,0.75)' : Colors.textSecondary;
-  const pillBg      = hasImage ? 'rgba(255,255,255,0.18)' : Colors.primary + '18';
+  const metaColor   = hasImage ? Colors.glassTextMid : Colors.textSecondary;
+  const pillBg      = hasImage ? Colors.glassBgStrong : Colors.primary + '18';
   const pillColor   = hasImage ? '#fff' : Colors.primary;
 
   const cardInner = (
@@ -153,7 +153,7 @@ export default function WishCard({ wish, onPress, onMarkDone, onMarkUndone, onDe
         {/* Gradient overlay */}
         {hasImage && (
           <LinearGradient
-            colors={['transparent', 'rgba(0,0,0,0.55)', 'rgba(0,0,0,0.80)']}
+            colors={['transparent', Colors.overlayImageMid, Colors.overlayImageDeep]}
             locations={[0.2, 0.6, 1]}
             style={StyleSheet.absoluteFill}
           />
@@ -179,47 +179,67 @@ export default function WishCard({ wish, onPress, onMarkDone, onMarkUndone, onDe
             <Text style={[styles.title, { color: titleColor }, wish.is_done && styles.titleDone]} numberOfLines={2}>
               {wish.title}
             </Text>
-
-            {(wish.comments?.[0]?.count ?? 0) > 0 && (
-              <View style={styles.commentBadge}>
-                <Ionicons name="chatbubble-outline" size={12} color={metaColor} />
-                <Text style={[styles.commentCount, { color: metaColor }]}>{wish.comments![0].count}</Text>
-              </View>
-            )}
           </View>
 
-          {effectiveBothVoted && effectiveAvgLabel !== null && (
-            <View style={[styles.avgBanner, hasImage && styles.avgBannerOnImage]}>
-              <PriorityHearts
-                value={Math.round(effectiveAvg!)}
-                size={16}
-                filledColor={hasImage ? Colors.hearts : Colors.heartsDark}
-                emptyColor={hasImage ? Colors.hearts + '70' : '#D1D5DB'}
-              />
-              <Text style={[styles.avgBannerValue, hasImage && { color: '#fff' }]}>{effectiveAvgLabel}</Text>
-            </View>
-          )}
+          {(() => {
+            const commentCount = wish.comments?.[0]?.count ?? 0;
+            const commentEl = commentCount > 0 ? (
+              <View style={styles.commentBadge}>
+                <Ionicons name="chatbubble-outline" size={12} color={metaColor} />
+                <Text style={[styles.commentCount, { color: metaColor }]}>{commentCount}</Text>
+              </View>
+            ) : null;
 
-          {!effectiveBothVoted && effectiveMyVote && !theirVote && (
-            <View style={[styles.waitingBanner, hasImage && styles.waitingBannerOnImage]}>
-              <Ionicons name="time-outline" size={13} color={hasImage ? 'rgba(255,255,255,0.7)' : Colors.textSecondary} />
-              <Text style={[styles.waitingBannerText, hasImage && { color: 'rgba(255,255,255,0.7)' }]}>
-                Partner non ha ancora votato
-              </Text>
-            </View>
-          )}
+            if (effectiveBothVoted && effectiveAvgLabel !== null) {
+              return (
+                <View style={[styles.avgBanner, hasImage && styles.avgBannerOnImage]}>
+                  <PriorityHearts
+                    value={Math.round(effectiveAvg!)}
+                    size={16}
+                    filledColor={hasImage ? Colors.hearts : Colors.heartsDark}
+                    emptyColor={hasImage ? Colors.hearts + '70' : Colors.inputEmpty}
+                  />
+                  <Text style={[styles.avgBannerValue, hasImage && { color: '#fff' }]}>{effectiveAvgLabel}</Text>
+                  {commentEl && <View style={styles.commentRight}>{commentEl}</View>}
+                </View>
+              );
+            }
 
-          {showVoteWarning && (
-            <TouchableOpacity
-              style={[styles.voteBanner, hasImage && styles.voteBannerOnImage]}
-              onPress={() => setVoteSheetVisible(true)}
-              activeOpacity={0.75}
-            >
-              <Ionicons name="heart-outline" size={13} color={hasImage ? '#FCD34D' : '#B45309'} />
-              <Text style={[styles.voteBannerText, hasImage && { color: '#FCD34D' }]}>Dai la tua priorità</Text>
-              <Ionicons name="chevron-forward" size={13} color={hasImage ? '#FCD34D' : '#B45309'} style={{ marginLeft: 'auto' }} />
-            </TouchableOpacity>
-          )}
+            if (!effectiveBothVoted && effectiveMyVote && !theirVote) {
+              return (
+                <View style={[styles.waitingBanner, hasImage && styles.waitingBannerOnImage]}>
+                  <Ionicons name="time-outline" size={13} color={hasImage ? Colors.glassTextLight : Colors.textSecondary} />
+                  <Text style={[styles.waitingBannerText, hasImage && { color: Colors.glassTextLight }]}>
+                    Partner non ha ancora votato
+                  </Text>
+                  {commentEl && <View style={styles.commentRight}>{commentEl}</View>}
+                </View>
+              );
+            }
+
+            if (showVoteWarning) {
+              return (
+                <TouchableOpacity
+                  style={[styles.voteBanner, hasImage && styles.voteBannerOnImage]}
+                  onPress={() => setVoteSheetVisible(true)}
+                  activeOpacity={0.75}
+                >
+                  <Ionicons name="heart-outline" size={13} color={hasImage ? Colors.voteBannerHighlight : Colors.voteBannerText} />
+                  <Text style={[styles.voteBannerText, hasImage && { color: Colors.voteBannerHighlight }]}>Dai la tua priorità</Text>
+                  <View style={styles.commentRight}>
+                    {commentEl}
+                    <Ionicons name="chevron-forward" size={13} color={hasImage ? Colors.voteBannerHighlight : Colors.voteBannerText} />
+                  </View>
+                </TouchableOpacity>
+              );
+            }
+
+            return commentEl ? (
+              <View style={[styles.waitingBanner, hasImage && styles.waitingBannerOnImage, { justifyContent: 'flex-end' }]}>
+                {commentEl}
+              </View>
+            ) : null;
+          })()}
         </View>
 
         <PriorityVoteSheet
@@ -261,10 +281,10 @@ export default function WishCard({ wish, onPress, onMarkDone, onMarkUndone, onDe
 const styles = StyleSheet.create({
   shadow: {
     marginHorizontal: Spacing.md,
-    marginBottom: Spacing.sm,
+    marginBottom: Spacing.md,
     borderRadius: Radii.card,
     backgroundColor: Colors.surface,
-    shadowColor: '#2A1D9E',
+    shadowColor: Colors.shadowCard,
     shadowOpacity: 0.14,
     shadowRadius: 16,
     shadowOffset: { width: 0, height: 14 },
@@ -301,10 +321,11 @@ const styles = StyleSheet.create({
   },
   categoryText: { fontSize: 11, fontWeight: '700' },
   rowRight: { marginLeft: 'auto', flexDirection: 'row', alignItems: 'center', gap: 6 },
-  title: { fontSize: 17, fontWeight: '700', marginBottom: 6, lineHeight: 23 },
+  title: { fontSize: 28, fontFamily: 'DMSerifDisplay_400Regular', marginBottom: 6, lineHeight: 34 },
   titleDone: { textDecorationLine: 'line-through', color: Colors.textSecondary },
   commentBadge: { flexDirection: 'row', alignItems: 'center', gap: 3 },
   commentCount: { fontSize: 12 },
+  commentRight: { marginLeft: 'auto', flexDirection: 'row', alignItems: 'center', gap: 6 },
 
   // Banners — versione normale
   avgBanner: {
@@ -329,8 +350,8 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   waitingBannerOnImage: {
-    backgroundColor: 'rgba(0,0,0,0.25)',
-    borderTopColor: 'rgba(255,255,255,0.15)',
+    backgroundColor: Colors.overlayMedium,
+    borderTopColor: Colors.glassBorderMid,
   },
   waitingBannerText: { fontSize: 12, color: Colors.textSecondary },
 
@@ -338,17 +359,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#FEF3C7',
+    backgroundColor: Colors.voteBannerBg,
     borderTopWidth: 1,
-    borderTopColor: '#FDE68A',
+    borderTopColor: Colors.voteBannerBorder,
     paddingHorizontal: Spacing.md,
     paddingVertical: 9,
   },
   voteBannerOnImage: {
-    backgroundColor: 'rgba(0,0,0,0.25)',
-    borderTopColor: 'rgba(255,255,255,0.15)',
+    backgroundColor: Colors.overlayMedium,
+    borderTopColor: Colors.glassBorderMid,
   },
-  voteBannerText: { fontSize: 12, fontWeight: '600', color: '#B45309' },
+  voteBannerText: { fontSize: 12, fontWeight: '600', color: Colors.voteBannerText },
 
   actionLeft: {
     flex: 1,

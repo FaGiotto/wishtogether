@@ -1,4 +1,4 @@
-import { View, Text, FlatList, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, FlatList, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from '../../lib/supabase';
 import { useCallback } from 'react';
@@ -45,7 +45,8 @@ export default function ArchiveScreen() {
               }}
               onDelete={async () => {
                 removeWish(item.id);
-                await supabase.from('wishes').delete().eq('id', item.id);
+                const { error } = await supabase.from('wishes').delete().eq('id', item.id);
+                if (error) { refresh(); Alert.alert('Errore', error.message); }
               }}
             />
           )}

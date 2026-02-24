@@ -105,6 +105,7 @@ export default function WishDetailScreen() {
     const buttons: any[] = [];
     if (!wish?.is_done) {
       buttons.push({ text: 'Segna come completato ✓', onPress: handleMarkDone });
+      buttons.push({ text: 'Modifica desiderio', onPress: () => router.push(`/modal/add-wish?wishId=${wish!.id}`) });
     }
     buttons.push({ text: 'Elimina desiderio', style: 'destructive', onPress: handleDelete });
     buttons.push({ text: 'Annulla', style: 'cancel' });
@@ -272,12 +273,12 @@ export default function WishDetailScreen() {
                     <View style={styles.priorityRowRight}>
                       {avgLabel !== null ? (
                         <>
-                          <PriorityHearts value={Math.round(average!)} size={18} filledColor={Colors.heartsDark} emptyColor="#D1D5DB" />
+                          <PriorityHearts value={Math.round(average!)} size={18} filledColor={Colors.heartsDark} emptyColor={Colors.inputEmpty} />
                           <Text style={styles.priorityAvgValue}>{avgLabel}</Text>
                         </>
                       ) : myEntry && !partnerEntry ? (
                         <>
-                          <PriorityHearts value={myEntry.value} size={18} filledColor={Colors.heartsDark} emptyColor="#D1D5DB" />
+                          <PriorityHearts value={myEntry.value} size={18} filledColor={Colors.heartsDark} emptyColor={Colors.inputEmpty} />
                           <Text style={styles.priorityPending}>in attesa</Text>
                         </>
                       ) : (
@@ -306,7 +307,11 @@ export default function WishDetailScreen() {
             {loadingComments ? (
               <ActivityIndicator color={Colors.primary} style={{ marginVertical: Spacing.md }} />
             ) : comments.length === 0 ? (
-              <Text style={styles.emptyComments}>Nessun commento ancora. Sii il primo!</Text>
+              <View style={styles.emptyComments}>
+                <Ionicons name="chatbubble-ellipses-outline" size={36} color={Colors.inputEmpty} />
+                <Text style={styles.emptyCommentsText}>Nessun commento ancora</Text>
+                <Text style={styles.emptyCommentsHint}>Sii il primo a scrivere qualcosa</Text>
+              </View>
             ) : (
               comments.map((c) => (
                 <CommentBubble
@@ -325,7 +330,7 @@ export default function WishDetailScreen() {
           <TextInput
             style={styles.input}
             placeholder="Scrivi un commento..."
-            placeholderTextColor={Colors.textSecondary}
+            placeholderTextColor={Colors.glassTextLight}
             value={commentText}
             onChangeText={setCommentText}
             multiline
@@ -397,7 +402,7 @@ const styles = StyleSheet.create({
     borderRadius: Radii.card,
     borderWidth: 1,
     borderColor: Colors.border,
-    shadowColor: '#2A1D9E',
+    shadowColor: Colors.shadowCard,
     shadowOpacity: 0.08,
     shadowRadius: 12,
     shadowOffset: { width: 0, height: 4 },
@@ -427,31 +432,40 @@ const styles = StyleSheet.create({
   },
   // (alias for priority section — keeps commentsTitle for comments header)
   emptyComments: {
-    ...Typography.body,
+    alignSelf: 'stretch',
+    alignItems: 'center',
+    paddingVertical: Spacing.xl,
+    gap: 6,
+  },
+  emptyCommentsText: {
+    fontSize: 18,
+    fontFamily: 'DMSerifDisplay_400Regular',
     color: Colors.textSecondary,
     textAlign: 'center',
-    paddingVertical: Spacing.lg,
-    paddingHorizontal: Spacing.md,
+  },
+  emptyCommentsHint: {
+    ...Typography.caption,
+    textAlign: 'center',
   },
 
   // Footer
   footer: {
     flexDirection: 'row', alignItems: 'flex-end',
     paddingHorizontal: Spacing.md, paddingTop: Spacing.md, paddingBottom: 28,
-    backgroundColor: Colors.surface,
-    borderTopWidth: 1, borderTopColor: Colors.border,
+    backgroundColor: Colors.cardDark,
+    borderTopWidth: 1, borderTopColor: Colors.glassBorder,
     gap: Spacing.sm,
   },
   input: {
     flex: 1,
-    backgroundColor: Colors.background,
-    borderWidth: 1.5, borderColor: Colors.border,
+    backgroundColor: Colors.glassBorder,
+    borderWidth: 1.5, borderColor: Colors.glassBorderAlt,
     borderRadius: 20,
     paddingHorizontal: Spacing.md,
     paddingTop: 10,
     paddingBottom: 10,
     fontSize: 15,
-    color: Colors.textPrimary,
+    color: '#fff',
     maxHeight: 100,
   },
   sendBtn: {

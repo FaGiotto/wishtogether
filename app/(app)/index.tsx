@@ -159,7 +159,8 @@ export default function HomeScreen() {
               }}
               onDelete={async () => {
                 removeWish(item.id);
-                await supabase.from('wishes').delete().eq('id', item.id);
+                const { error } = await supabase.from('wishes').delete().eq('id', item.id);
+                if (error) { refreshWishes(); Alert.alert('Errore', error.message); }
               }}
             />
           )}
@@ -175,7 +176,11 @@ export default function HomeScreen() {
       <View style={styles.fabContainer}>
         <TouchableOpacity
           style={styles.fab}
-          onPress={() => router.push('/modal/add-wish')}
+          onPress={() => router.push(
+            selectedCategory === ALL_CATEGORIES_KEY
+              ? '/modal/add-wish'
+              : `/modal/add-wish?category=${selectedCategory}`
+          )}
           activeOpacity={0.85}
         >
           <Ionicons name="add" size={28} color="#fff" />
@@ -197,23 +202,22 @@ const styles = StyleSheet.create({
   headerTitle: { ...Typography.title, color: Colors.textPrimary },
   avatar: {
     width: 38, height: 38, borderRadius: 19,
-    backgroundColor: Colors.primary + '20',
-    borderWidth: 1.5, borderColor: Colors.primary,
+    backgroundColor: Colors.cardDark,
     justifyContent: 'center', alignItems: 'center',
   },
-  avatarText: { color: Colors.primary, fontWeight: '700', fontSize: 15 },
+  avatarText: { color: '#fff', fontWeight: '700', fontSize: 15 },
   // Gate
   gateContainer: { flex: 1, justifyContent: 'center', paddingHorizontal: Spacing.md, paddingBottom: Spacing.xl },
   gateCard: {
-    backgroundColor: '#16151F',
+    backgroundColor: Colors.cardDark,
     borderRadius: 28, padding: Spacing.xl, alignItems: 'center',
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
+    borderWidth: 1, borderColor: Colors.glassBorder,
     shadowColor: '#000', shadowOpacity: 0.4, shadowRadius: 28, shadowOffset: { width: 0, height: 10 }, elevation: 10,
   },
   gateIconWrap: {
     width: 88, height: 88, borderRadius: 44,
-    backgroundColor: 'rgba(255,255,255,0.08)',
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.12)',
+    backgroundColor: Colors.glassBorder,
+    borderWidth: 1, borderColor: Colors.glassBorderAlt,
     justifyContent: 'center', alignItems: 'center', marginBottom: Spacing.lg,
   },
   gateHeartBadge: {
@@ -222,11 +226,11 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primary,
     justifyContent: 'center', alignItems: 'center',
   },
-  gateTitle: { fontSize: 24, fontWeight: '700', color: '#fff', textAlign: 'center', marginBottom: Spacing.sm },
-  gateSubtitle: { ...Typography.body, color: 'rgba(255,255,255,0.55)', textAlign: 'center', lineHeight: 22, marginBottom: Spacing.lg },
+  gateTitle: { fontSize: 24, fontFamily: 'DMSerifDisplay_400Regular', color: '#fff', textAlign: 'center', marginBottom: Spacing.sm },
+  gateSubtitle: { ...Typography.body, color: Colors.glassTextSub, textAlign: 'center', lineHeight: 22, marginBottom: Spacing.lg },
   gatePills: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 8, marginBottom: Spacing.xl },
-  gatePill: { flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.12)', borderRadius: Radii.full, paddingVertical: 6, paddingHorizontal: 11, backgroundColor: 'rgba(255,255,255,0.06)' },
-  gatePillText: { fontSize: 12, fontWeight: '700', color: 'rgba(255,255,255,0.75)' },
+  gatePill: { flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: Colors.glassBorderAlt, borderRadius: Radii.full, paddingVertical: 6, paddingHorizontal: 11, backgroundColor: Colors.glassBg },
+  gatePillText: { fontSize: 12, fontWeight: '700', color: Colors.glassTextMid },
   gateButton: {
     flexDirection: 'row', alignItems: 'center',
     backgroundColor: Colors.primary, borderRadius: Radii.button,

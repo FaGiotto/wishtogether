@@ -1,5 +1,6 @@
 import { View, StyleSheet } from 'react-native';
 import { ReactNode } from 'react';
+import { Colors } from '../constants/theme';
 
 interface Props {
   children: ReactNode;
@@ -23,7 +24,7 @@ export default function GradientBackground({ children, style }: Props) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F7FF',
+    backgroundColor: Colors.backgroundGradient,
     overflow: 'hidden',
   },
   blobTopLeft: {
@@ -33,7 +34,7 @@ const styles = StyleSheet.create({
     width: 280,
     height: 280,
     borderRadius: 140,
-    backgroundColor: '#A78BFA',
+    backgroundColor: Colors.blobPrimary,
     opacity: 0.22,
   },
   blobBottomRight: {
@@ -43,7 +44,7 @@ const styles = StyleSheet.create({
     width: 260,
     height: 260,
     borderRadius: 130,
-    backgroundColor: '#C4B5FD',
+    backgroundColor: Colors.blobSecondary,
     opacity: 0.28,
   },
   blobCenter: {
@@ -53,7 +54,7 @@ const styles = StyleSheet.create({
     width: 180,
     height: 180,
     borderRadius: 90,
-    backgroundColor: '#7C5CFC',
+    backgroundColor: Colors.primary,
     opacity: 0.10,
   },
 });

@@ -7,7 +7,6 @@ import { Link } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../../lib/supabase';
 import { Colors, Typography, Spacing, Radii } from '../../constants/theme';
-import GradientBackground from '../../components/GradientBackground';
 import FloatingLabelInput from '../../components/FloatingLabelInput';
 
 export default function RegisterScreen() {
@@ -36,7 +35,7 @@ export default function RegisterScreen() {
   }
 
   return (
-    <GradientBackground>
+    <View style={styles.screen}>
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -57,6 +56,7 @@ export default function RegisterScreen() {
               onChangeText={setName}
               autoCapitalize="words"
               autoCorrect={false}
+              dark
             />
             <FloatingLabelInput
               label="Email"
@@ -64,12 +64,14 @@ export default function RegisterScreen() {
               onChangeText={setEmail}
               autoCapitalize="none"
               keyboardType="email-address"
+              dark
             />
             <FloatingLabelInput
               label="Password (min. 6 caratteri)"
               value={password}
               onChangeText={setPassword}
               secureTextEntry
+              dark
             />
 
             <TouchableOpacity style={styles.button} onPress={handleRegister} disabled={loading} activeOpacity={0.85}>
@@ -89,11 +91,12 @@ export default function RegisterScreen() {
           </Link>
         </ScrollView>
       </KeyboardAvoidingView>
-    </GradientBackground>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  screen: { flex: 1, backgroundColor: Colors.cardDark },
   flex: { flex: 1 },
   inner: { flexGrow: 1, justifyContent: 'center', paddingHorizontal: Spacing.lg, paddingVertical: Spacing.xl },
   logoWrap: { alignItems: 'center', marginBottom: 40 },
@@ -101,23 +104,18 @@ const styles = StyleSheet.create({
     width: 72,
     height: 72,
     borderRadius: 36,
-    backgroundColor: Colors.surface,
+    backgroundColor: '#fff',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: Spacing.md,
-    shadowColor: Colors.primary,
-    shadowOpacity: 0.25,
-    shadowRadius: 16,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 4,
   },
   appName: {
     fontSize: 30,
-    fontWeight: '700',
-    color: Colors.textPrimary,
+    fontFamily: 'DMSerifDisplay_400Regular',
+    color: '#fff',
     marginBottom: 6,
   },
-  tagline: { ...Typography.body, color: Colors.textSecondary },
+  tagline: { ...Typography.body, color: Colors.glassTextSub },
   form: { marginBottom: Spacing.lg },
   button: {
     backgroundColor: Colors.primary,
@@ -126,13 +124,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: Spacing.sm,
     shadowColor: Colors.primary,
-    shadowOpacity: 0.3,
+    shadowOpacity: 0.4,
     shadowRadius: 12,
     shadowOffset: { width: 0, height: 4 },
     elevation: 6,
   },
   buttonText: { ...Typography.subtitle, color: '#fff' },
   linkButton: { alignItems: 'center', marginTop: Spacing.md },
-  linkText: { ...Typography.body, color: Colors.textSecondary },
-  linkBold: { color: Colors.primary, fontWeight: '600' },
+  linkText: { ...Typography.body, color: Colors.glassTextLight },
+  linkBold: { color: Colors.blobPrimary, fontWeight: '600' },
 });

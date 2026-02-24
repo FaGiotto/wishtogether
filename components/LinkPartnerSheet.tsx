@@ -227,7 +227,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primary, borderRadius: Radii.button,
     paddingVertical: 17, alignItems: 'center',
   },
-  buttonSecondary: { backgroundColor: '#16151F' },
+  buttonSecondary: { backgroundColor: Colors.cardDark },
   buttonDisabled: { opacity: 0.4 },
   buttonText: { ...Typography.subtitle, color: '#fff' },
 });
